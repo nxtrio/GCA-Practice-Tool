@@ -23,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nxtrio/GCA-Practice-tool.git"
+    "url": "git+https://github.com/nxtrio/GCA-Practice-Tool.git"
   },
   "bugs": {
-    "url": "https://github.com/nxtrio/GCA-Practice-tool/issues"
+    "url": "https://github.com/nxtrio/GCA-Practice-Tool/issues"
   },
-  "homepage": "https://github.com/nxtrio/GCA-Practice-tool#readme",
+  "homepage": "https://github.com/nxtrio/GCA-Practice-Tool#readme",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/node": "26.2.0",
