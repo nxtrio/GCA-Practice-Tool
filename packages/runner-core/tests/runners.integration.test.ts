@@ -375,7 +375,8 @@ function sourceFor(
       syntax: "int solution(vector<int> values) { return ; }",
       runtime:
         'int solution(vector<int> values) { throw runtime_error("boom"); }',
-      timeout: "int solution(vector<int> values) { while (true) {} }",
+      timeout:
+        "int solution(vector<int> values) { volatile unsigned long long spin = 0; while (true) spin = spin + 1; }",
       output:
         "int solution(vector<int> values) { cout << string(1024 * 1024, 'x'); return 0; }",
       matrix:
