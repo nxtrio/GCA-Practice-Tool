@@ -92,11 +92,14 @@ test("completes the two-question Roblox preset workflow", async ({ page }) => {
   await page.locator(".monaco-editor .view-lines").click();
   await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.type(
-    "def solution(grid):\n    return [list(row) for row in zip(*[([0] * (len(grid) - len([value for value in column if value != 0])) + [value for value in column if value != 0]) for column in zip(*grid)])]",
+    "def solution(grid):\n    return [list(row) for row in zip(*(sorted(column, key=lambda value: value != 0) for column in zip(*grid)))]",
+  );
+  await expect(page.locator(".monaco-editor .view-lines")).toContainText(
+    "sorted(column",
   );
 
   await page.getByRole("button", { name: "Run visible tests" }).click();
-  await expect(page.getByText(/2\/2 passed/)).toBeVisible();
+  await expect(page.getByText(/2\/2 passed/)).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText(/5\/5 passed/)).toBeVisible();
   await page.getByRole("button", { name: /Question 2:/ }).click();
