@@ -3,15 +3,13 @@ import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
 test("imports, solves, preserves, finishes, and exports a session", async ({ page }) => {
-  const assessment = await readFile(
-    resolve("fixtures/assessments/valid-gca.json"),
-    "utf8",
-  );
-
   await page.goto("/import");
   await expect(page.getByText("Imported code runs on this computer")).toBeVisible();
   await page.getByLabel(/I trust this assessment source/).check();
-  await page.getByLabel("Assessment JSON").fill(assessment);
+  await page.getByLabel("Upload JSON file").setInputFiles(
+    resolve("fixtures/assessments/valid-gca.json"),
+  );
+  await expect(page.getByText("Loaded valid-gca.json")).toBeVisible();
   await expect(page.getByText("Assessment is ready")).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: /Start Assessment/ }).click();
 
@@ -59,4 +57,9 @@ test("imports, solves, preserves, finishes, and exports a session", async ({ pag
     "reference solutions",
   ]));
   expect(exported.assessment.problems[0]?.finalCode?.source).toContain("sum(numbers)");
+
+  await page.getByRole("button", { name: "Redo this assessment" }).click();
+  await expect(page).toHaveURL(/\/assessment\/[^/]+$/);
+  await expect(page.getByText("Array Total").first()).toBeVisible();
+  await expect(page.locator(".monaco-editor .view-lines")).not.toContainText("sum(numbers)");
 });

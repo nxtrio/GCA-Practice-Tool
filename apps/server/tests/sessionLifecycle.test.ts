@@ -191,6 +191,31 @@ describe("SessionService persistence lifecycle", () => {
     });
   });
 
+  it("starts a clean attempt for the same persisted assessment", () => {
+    const original = service.startSession(persistedAssessment.id);
+    service.saveCode({
+      sessionId: original.id,
+      problemId: "p1",
+      language: "python",
+      source: "def solution(numbers):\n    return sum(numbers)",
+    });
+    service.finishSession(original.id);
+
+    nowMs += 1_000;
+    const restarted = service.startSession(persistedAssessment.id);
+    const resumed = service.resumeSession(restarted.id);
+
+    expect(restarted.id).not.toBe(original.id);
+    expect(restarted.assessmentId).toBe(original.assessmentId);
+    expect(restarted.status).toBe("active");
+    expect(restarted.startedAt).toBe("2026-08-16T12:00:01.000Z");
+    expect(resumed.assessment.assessment.assessment.problems.map((problem) => problem.id)).toEqual(
+      fixture.assessment.problems.map((problem) => problem.id),
+    );
+    expect(resumed.code).toEqual([]);
+    expect(resumed.submissions).toEqual([]);
+  });
+
   it("allows explicit expiration only once the persisted deadline is reached", () => {
     const session = service.startSession(persistedAssessment.id);
 

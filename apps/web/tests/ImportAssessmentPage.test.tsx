@@ -73,6 +73,47 @@ describe("ImportAssessmentPage", () => {
     expect(writeText.mock.calls[0]?.[0]).toContain("/assessment/problems");
   });
 
+  it("loads an uploaded JSON file and validates it after trust confirmation", async () => {
+    const client = fakeClient({ valid: false, errors: [], warnings: [] });
+    render(<MemoryRouter><ImportAssessmentPage client={client} /></MemoryRouter>);
+    const source = '{"schemaVersion":"1.0"}';
+    const file = new File([source], "practice-assessment.json", {
+      type: "application/json",
+    });
+
+    fireEvent.change(screen.getByLabelText("Upload JSON file"), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByText("Loaded practice-assessment.json")).toBeDefined();
+    expect((screen.getByLabelText("Assessment JSON") as HTMLTextAreaElement).value).toBe(source);
+    expect(client.validateAssessment).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: /I trust this assessment source/ }));
+    await waitFor(() => expect(client.validateAssessment).toHaveBeenCalledWith(source), {
+      timeout: 2_000,
+    });
+  });
+
+  it("rejects oversized and non-JSON uploads before validation", async () => {
+    const client = fakeClient({ valid: false, errors: [], warnings: [] });
+    render(<MemoryRouter><ImportAssessmentPage client={client} /></MemoryRouter>);
+    const upload = screen.getByLabelText("Upload JSON file");
+
+    fireEvent.change(upload, {
+      target: { files: [new File(["plain text"], "assessment.txt", { type: "text/plain" })] },
+    });
+    expect(await screen.findByText("Choose a JSON file with a .json extension.")).toBeDefined();
+
+    fireEvent.change(upload, {
+      target: {
+        files: [new File([new Uint8Array(1_500_001)], "assessment.json", { type: "application/json" })],
+      },
+    });
+    expect(await screen.findByText("JSON files must be 1.5 MB or smaller.")).toBeDefined();
+    expect(client.validateAssessment).not.toHaveBeenCalled();
+  });
+
   it("warns that imported reference code executes locally", () => {
     render(<MemoryRouter><ImportAssessmentPage client={fakeClient({ valid: false, errors: [], warnings: [] })} /></MemoryRouter>);
 

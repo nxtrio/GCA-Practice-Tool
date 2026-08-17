@@ -134,13 +134,13 @@ export function ImportAssessmentPage({
           <p className="home-eyebrow">Assessment generator</p>
           <h1>From prompt to practice in minutes.</h1>
           <p>
-            Copy a purpose-built prompt into your preferred LLM, then paste its
-            JSON response here. The local validator checks structure and runs
+            Copy a purpose-built prompt into your preferred LLM, then upload or
+            paste its JSON response here. The local validator checks structure and runs
             every Python reference answer before anything is saved.
           </p>
           <div className="workflow-line" aria-label="Import workflow">
             <span className="workflow-active">1</span><b>Copy prompt</b><i />
-            <span>2</span><b>Paste JSON</b><i />
+            <span>2</span><b>Add JSON</b><i />
             <span>3</span><b>Start</b>
           </div>
           <button
@@ -160,7 +160,7 @@ export function ImportAssessmentPage({
             <div>
               <strong id="execution-warning-title">Imported code runs on this computer</strong>
               <p>
-                Validation executes every Python reference solution in the pasted JSON.
+                Validation executes every Python reference solution in the selected JSON.
                 Runner processes receive a reduced environment, but native execution
                 is not sandboxed and can access files, the network, or other processes.
               </p>

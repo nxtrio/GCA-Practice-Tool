@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AssessmentResultView, ImportWorkflowClient } from "../src/api/importClient.ts";
@@ -58,7 +59,68 @@ describe("Phase 10 result and history pages", () => {
 
     expect(await screen.findByText("Active Practice")).toBeDefined();
     expect(screen.getByRole("link", { name: /Active Practice/ }).getAttribute("href")).toBe("/assessment/active-1");
-    expect(screen.getByRole("link", { name: /Sunday Practice/ }).getAttribute("href")).toBe("/results/session-1");
+    expect(screen.getByRole("link", { name: "View results" }).getAttribute("href")).toBe("/results/session-1");
+    expect(screen.getByRole("button", { name: "Redo Sunday Practice" })).toBeDefined();
+  });
+
+  it("starts a fresh session from a selected history entry", async () => {
+    const user = userEvent.setup();
+    const startSession = vi.fn(async () => ({
+      id: "session-redo",
+      assessmentId: result.assessmentId,
+      status: "active" as const,
+      startedAt: "2026-08-16T14:00:00.000Z",
+      expiresAt: "2026-08-16T15:10:00.000Z",
+      finishedAt: null,
+      createdAt: "2026-08-16T14:00:00.000Z",
+    }));
+    const client = partialClient({
+      startSession,
+      history: vi.fn(async () => ({ unfinished: [], completed: [result] })),
+    });
+    render(
+      <MemoryRouter initialEntries={["/history"]}>
+        <Routes>
+          <Route path="/history" element={<HistoryPage client={client} />} />
+          <Route path="/assessment/:sessionId" element={<p>Fresh assessment session</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Redo Sunday Practice" }));
+
+    expect(startSession).toHaveBeenCalledWith("assessment-1");
+    expect(await screen.findByText("Fresh assessment session")).toBeDefined();
+  });
+
+  it("restarts the same assessment directly from its results", async () => {
+    const user = userEvent.setup();
+    const startSession = vi.fn(async () => ({
+      id: "session-redo",
+      assessmentId: result.assessmentId,
+      status: "active" as const,
+      startedAt: "2026-08-16T14:00:00.000Z",
+      expiresAt: "2026-08-16T15:10:00.000Z",
+      finishedAt: null,
+      createdAt: "2026-08-16T14:00:00.000Z",
+    }));
+    const client = partialClient({
+      results: vi.fn(async () => result),
+      startSession,
+    });
+    render(
+      <MemoryRouter initialEntries={["/results/session-1"]}>
+        <Routes>
+          <Route path="/results/:sessionId" element={<ResultsPage client={client} />} />
+          <Route path="/assessment/:sessionId" element={<p>Fresh assessment session</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Redo this assessment" }));
+
+    expect(startSession).toHaveBeenCalledWith("assessment-1");
+    expect(await screen.findByText("Fresh assessment session")).toBeDefined();
   });
 });
 

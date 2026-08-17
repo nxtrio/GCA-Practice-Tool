@@ -22,10 +22,10 @@ npm start
 ## What you get
 
 - Four-question, 70-minute assessment sessions with autosave and resume
-- Prompt-assisted assessment generation with strict JSON, semantic, and reference-solution validation
+- Prompt-assisted generation with upload-or-paste JSON import and strict reference-solution validation
 - Monaco editor with Java, C++, and Python runners
 - Separate Run and Submit flows; hidden test details stay private during sessions
-- Automatic completion, results, history, environment checks, and editor settings
+- Automatic completion, results, history, one-click assessment retries, environment checks, and editor settings
 - Privacy-safe JSON export for LLM readiness analysis and practice recommendations
 - Local SQLite persistence—your assessments and code stay on your machine
 

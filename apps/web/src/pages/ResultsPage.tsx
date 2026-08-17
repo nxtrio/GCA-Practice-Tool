@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ApiImportWorkflowClient,
   type AssessmentResultView,
@@ -11,8 +11,11 @@ const defaultClient = new ApiImportWorkflowClient();
 
 export function ResultsPage({ client = defaultClient }: { client?: ImportWorkflowClient }) {
   const { sessionId = "" } = useParams();
+  const navigate = useNavigate();
   const [result, setResult] = useState<AssessmentResultView>();
   const [error, setError] = useState<string>();
+  const [restartError, setRestartError] = useState<string>();
+  const [restarting, setRestarting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -27,6 +30,18 @@ export function ResultsPage({ client = defaultClient }: { client?: ImportWorkflo
 
   if (error) return <PageError message={error} />;
   if (!result) return <div className="workspace-loading">Calculating results…</div>;
+
+  const redoAssessment = async () => {
+    setRestartError(undefined);
+    setRestarting(true);
+    try {
+      const session = await client.startSession(result.assessmentId);
+      navigate(`/assessment/${session.id}`);
+    } catch (reason: unknown) {
+      setRestartError(reason instanceof Error ? reason.message : "The assessment could not be restarted.");
+      setRestarting(false);
+    }
+  };
 
   return (
     <main className="results-page">
@@ -57,15 +72,24 @@ export function ResultsPage({ client = defaultClient }: { client?: ImportWorkflo
         ))}
       </section>
       <div className="results-actions">
-        <a
+        <button
           className="button button--primary"
+          disabled={restarting}
+          onClick={() => { void redoAssessment(); }}
+          type="button"
+        >
+          {restarting ? "Starting…" : "Redo this assessment"}
+        </button>
+        <a
+          className="button button--secondary"
           href={`/api/sessions/${encodeURIComponent(result.sessionId)}/export`}
           download={`${filenameSlug(result.assessmentTitle)}-readiness-analysis.json`}
         >
           Export analysis JSON
         </a>
-        <Link className="button button--primary" to="/import">Start another assessment</Link>
+        <Link className="button button--secondary" to="/import">Start another assessment</Link>
         <Link className="button button--secondary" to="/history">View history</Link>
+        {restartError && <p className="results-action-error" role="alert">{restartError}</p>}
       </div>
     </main>
   );
