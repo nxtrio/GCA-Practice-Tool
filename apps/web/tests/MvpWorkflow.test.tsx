@@ -28,6 +28,10 @@ describe("MVP browser workflow", () => {
       "gca-practice:demo-session:expires-at",
       new Date(Date.now() + 10 * 60 * 1_000).toISOString(),
     );
+    window.localStorage.setItem(
+      "gca-practice:code:demo-session:p1:java",
+      "LEGACY DEMO SOURCE",
+    );
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const path = String(input);
       if (path.endsWith("/api/history")) {
@@ -41,12 +45,20 @@ describe("MVP browser workflow", () => {
     render(<MemoryRouter initialEntries={["/assessment/demo"]}><App /></MemoryRouter>);
 
     expect(await screen.findByText("1:10:00")).toBeDefined();
+    const editor = await screen.findByLabelText("java code editor");
+    expect((editor as HTMLTextAreaElement).value).not.toBe("LEGACY DEMO SOURCE");
+    await waitFor(() => {
+      expect(window.localStorage.getItem("gca-practice:demo-session:expires-at")).toBeNull();
+      expect(window.localStorage.getItem("gca-practice:code:demo-session:p1:java")).toBeNull();
+    });
+    fireEvent.change(editor, { target: { value: "FIRST DEMO DRAFT" } });
     fireEvent.click(screen.getByRole("button", { name: "Finish session" }));
     const reopen = await screen.findByRole("link", { name: "Open demo workspace" });
     expect(screen.queryByLabelText("Time remaining")).toBeNull();
 
     fireEvent.click(reopen);
     expect(await screen.findByText("1:10:00")).toBeDefined();
+    expect((await screen.findByLabelText("java code editor") as HTMLTextAreaElement).value).not.toBe("FIRST DEMO DRAFT");
   });
 
   it("imports, runs, submits, preserves code, finishes, and displays results", async () => {

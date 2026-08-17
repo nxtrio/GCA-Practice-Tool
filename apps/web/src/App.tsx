@@ -9,7 +9,7 @@ import {
 } from "./api/importClient.js";
 import {
   ApiBackedCodePersistence,
-  BrowserCodePersistence,
+  MemoryCodePersistence,
 } from "./editor/codePersistence.js";
 import { HomePage } from "./pages/HomePage.js";
 
@@ -31,7 +31,9 @@ const SettingsPage = lazy(async () => ({ default: (await import("./pages/Setting
 const importClient = new ApiImportWorkflowClient();
 const judgeClient = new ApiJudgeClient();
 
-const demoPersistence = new BrowserCodePersistence();
+const legacyDemoExpirationKey = "gca-practice:demo-session:expires-at";
+const legacyDemoCodePrefix = "gca-practice:code:demo-session:";
+let demoInstance = 0;
 
 function SessionAssessmentRoute() {
   const { sessionId = "" } = useParams();
@@ -126,36 +128,53 @@ function latestCodeSnapshots(code: ResumedSessionView["code"]) {
 
 function DemoAssessmentRoute() {
   const navigate = useNavigate();
+  const [sessionId] = useState(createDemoSessionId);
   const [expiresAt] = useState(createDemoExpiration);
+  const persistence = useMemo(() => new MemoryCodePersistence(), []);
+
+  useEffect(() => clearLegacyDemoState(), []);
+
   return (
     <Suspense fallback={<div className="workspace-loading">Opening workspace…</div>}>
       <AssessmentPage
-        sessionId="demo-session"
+        sessionId={sessionId}
         assessment={demoAssessment}
         expiresAt={expiresAt}
-        persistence={demoPersistence}
-        onFinish={(code) => {
-          for (const snapshot of code) {
-            demoPersistence.save(
-              {
-                sessionId: "demo-session",
-                problemId: snapshot.problemId,
-                language: snapshot.language,
-              },
-              snapshot.source,
-            );
-          }
-          navigate("/", { replace: true });
-        }}
+        persistence={persistence}
+        onFinish={() => navigate("/", { replace: true })}
       />
     </Suspense>
   );
+}
+
+function createDemoSessionId(): string {
+  demoInstance += 1;
+  return `demo-session-${demoInstance}`;
 }
 
 function createDemoExpiration(): string {
   return new Date(
     Date.now() + demoAssessment.durationSeconds * 1_000,
   ).toISOString();
+}
+
+function clearLegacyDemoState(): void {
+  try {
+    const keys = Array.from(
+      { length: window.localStorage.length },
+      (_, index) => window.localStorage.key(index),
+    );
+    for (const key of keys) {
+      if (
+        key === legacyDemoExpirationKey ||
+        key?.startsWith(legacyDemoCodePrefix)
+      ) {
+        window.localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // The demo remains fully usable in memory when browser storage is blocked.
+  }
 }
 
 export function App() {
