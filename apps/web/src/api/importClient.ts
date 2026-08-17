@@ -1,4 +1,4 @@
-import type { Language, Session } from "@gca-practice/contracts";
+import type { AssessmentPresetId, Language, Session } from "@gca-practice/contracts";
 import type { AssessmentView } from "../assessment/types.js";
 import type { ProblemHistoryEntry } from "../generation/AvoidanceManifestBuilder.js";
 
@@ -75,6 +75,7 @@ export interface AssessmentResultView {
   sessionId: string;
   assessmentId: string;
   assessmentTitle: string;
+  preset: AssessmentPresetId;
   status: Session["status"];
   startedAt: string;
   expiresAt: string;
@@ -91,6 +92,7 @@ export interface AssessmentResultView {
 export interface UnfinishedSessionView {
   sessionId: string;
   assessmentTitle: string;
+  preset: AssessmentPresetId;
   startedAt: string;
   expiresAt: string;
   problemsSolved: number;
@@ -110,7 +112,7 @@ export interface CompletionCodeSnapshot {
 
 export interface ImportWorkflowClient {
   environment(): Promise<EnvironmentView>;
-  problemHistory(): Promise<ProblemHistoryEntry[]>;
+  problemHistory(preset?: AssessmentPresetId): Promise<ProblemHistoryEntry[]>;
   validateAssessment(source: string): Promise<AssessmentValidationView>;
   importAssessment(validationId: string): Promise<AssessmentView>;
   startSession(assessmentId: string): Promise<Session>;
@@ -136,8 +138,8 @@ export class ApiImportWorkflowClient implements ImportWorkflowClient {
     return this.request("/api/environment");
   }
 
-  problemHistory(): Promise<ProblemHistoryEntry[]> {
-    return this.request("/api/problem-catalog");
+  problemHistory(preset?: AssessmentPresetId): Promise<ProblemHistoryEntry[]> {
+    return this.request(`/api/problem-catalog${preset ? `?preset=${preset}` : ""}`);
   }
 
   validateAssessment(source: string): Promise<AssessmentValidationView> {

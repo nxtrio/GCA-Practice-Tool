@@ -12,6 +12,7 @@ export interface ValidationResultsProps {
   state: ValidationState;
   starting: boolean;
   environment: EnvironmentView | undefined;
+  expectedPreset: AssessmentPreset;
   onCopyRepairPrompt(): void;
   onStartAssessment(): void;
 }
@@ -20,6 +21,7 @@ export function ValidationResults({
   state,
   starting,
   environment,
+  expectedPreset,
   onCopyRepairPrompt,
   onStartAssessment,
 }: ValidationResultsProps) {
@@ -95,6 +97,8 @@ export function ValidationResults({
       }))
     : [];
   const runnersReady = runners.length === 3 && runners.every(({ available }) => available);
+  const actualPreset = ASSESSMENT_PRESETS[state.result.assessment.preset];
+  const presetMatches = actualPreset.id === expectedPreset.id;
 
   return (
     <section className="validation-card validation-card--valid" aria-live="polite">
@@ -102,12 +106,12 @@ export function ValidationResults({
         <span className="validation-icon">✓</span>
         <div>
           <h2>Assessment is ready</h2>
-          <p>{state.result.assessment.title} · 4 problems · 70 minutes</p>
+          <p>{state.result.assessment.title} · {actualPreset.problemCount} problems · {actualPreset.durationSeconds / 60} minutes</p>
         </div>
       </div>
       <ul className="validation-checklist">
         <li><span>✓</span> JSON and schema valid</li>
-        <li><span>✓</span> Four-problem semantics valid</li>
+        <li><span>✓</span> {actualPreset.problemCount}-problem {actualPreset.shortName} semantics valid</li>
         <li><span>✓</span> Reference solutions verified</li>
         {runners.map(({ language, available, installationHint }) => (
           <li key={language} className={available ? "" : "check-missing"}>
@@ -118,6 +122,11 @@ export function ValidationResults({
         ))}
         {runners.length === 0 && <li className="check-missing"><span>!</span> Runner diagnostics unavailable</li>}
       </ul>
+      {!presetMatches && (
+        <p className="page-error" role="alert">
+          This JSON is for {actualPreset.displayName}, but you selected {expectedPreset.displayName}.
+        </p>
+      )}
       {state.result.warnings.length > 0 && (
         <div className="quality-warnings">
           <h3>Quality notes</h3>
@@ -127,10 +136,10 @@ export function ValidationResults({
       <button
         className="button button--primary start-assessment-button"
         type="button"
-        disabled={starting || !runnersReady}
+        disabled={starting || !runnersReady || !presetMatches}
         onClick={onStartAssessment}
       >
-        {starting ? "Starting…" : "Start Assessment"} <span aria-hidden="true">→</span>
+        {starting ? "Starting…" : `Start ${expectedPreset.shortName} Assessment`} <span aria-hidden="true">→</span>
       </button>
     </section>
   );
@@ -139,3 +148,7 @@ export function ValidationResults({
 function languageLabel(language: "java" | "cpp" | "python"): string {
   return language === "cpp" ? "C++" : language.charAt(0).toUpperCase() + language.slice(1);
 }
+import {
+  ASSESSMENT_PRESETS,
+  type AssessmentPreset,
+} from "@gca-practice/contracts";

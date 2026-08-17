@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ASSESSMENT_PRESETS } from "@gca-practice/contracts";
 import {
   ApiImportWorkflowClient,
   type AssessmentResultView,
@@ -30,6 +31,7 @@ export function ResultsPage({ client = defaultClient }: { client?: ImportWorkflo
 
   if (error) return <PageError message={error} />;
   if (!result) return <div className="workspace-loading">Calculating results…</div>;
+  const preset = ASSESSMENT_PRESETS[result.preset];
 
   const redoAssessment = async () => {
     setRestartError(undefined);
@@ -46,11 +48,11 @@ export function ResultsPage({ client = defaultClient }: { client?: ImportWorkflo
   return (
     <main className="results-page">
       <header className="simple-header">
-        <Link className="home-brand import-brand" to="/"><span className="brand-mark">G</span><span>GCA Practice</span></Link>
+        <Link className="home-brand import-brand" to="/"><span className="brand-mark" aria-hidden="true">G</span><span>{preset.practiceName}</span></Link>
         <Link to="/history">Assessment history</Link>
       </header>
       <section className="results-hero">
-        <p className="home-eyebrow">{result.status === "expired" ? "Time expired" : "Assessment complete"}</p>
+        <p className="home-eyebrow">{preset.displayName} · {result.status === "expired" ? "Time expired" : "Assessment complete"}</p>
         <h1>{result.assessmentTitle}</h1>
         <p>Your final snapshots and submissions are saved locally.</p>
       </section>
@@ -87,7 +89,7 @@ export function ResultsPage({ client = defaultClient }: { client?: ImportWorkflo
         >
           Export analysis JSON
         </a>
-        <Link className="button button--secondary" to="/import">Start another assessment</Link>
+        <Link className="button button--secondary" to="/">Start another assessment</Link>
         <Link className="button button--secondary" to="/history">View history</Link>
         {restartError && <p className="results-action-error" role="alert">{restartError}</p>}
       </div>

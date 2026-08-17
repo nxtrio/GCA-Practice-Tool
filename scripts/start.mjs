@@ -87,7 +87,7 @@ async function announceWhenReady() {
         fetch(apiUrl),
       ]);
       if (web.ok && api.ok) {
-        console.log(`\nGCA Practice is ready at ${appUrl}`);
+        console.log(`\nCoding Assessment Practice is ready at ${appUrl}`);
         console.log("Press Ctrl+C to stop.\n");
         openBrowser();
         return;
@@ -98,7 +98,7 @@ async function announceWhenReady() {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   if (!stopping) {
-    console.error(`GCA Practice did not become ready at ${appUrl}.`);
+    console.error(`Coding Assessment Practice did not become ready at ${appUrl}.`);
     stop(1);
   }
 }

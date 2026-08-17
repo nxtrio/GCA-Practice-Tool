@@ -3,6 +3,7 @@ import type {
   SupportedValue,
   TypeSpec,
 } from "./types.js";
+import type { AssessmentPresetId } from "./assessmentPresets.js";
 
 export interface Parameter {
   name: string;
@@ -62,6 +63,7 @@ export interface Problem {
 }
 
 export interface AssessmentDefinition {
+  preset?: AssessmentPresetId;
   title: string;
   durationSeconds: number;
   problems: Problem[];
@@ -71,4 +73,3 @@ export interface Assessment {
   schemaVersion: "1.0";
   assessment: AssessmentDefinition;
 }
-

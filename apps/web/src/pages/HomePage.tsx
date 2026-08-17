@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ASSESSMENT_PRESETS } from "@gca-practice/contracts";
 import {
   ApiImportWorkflowClient,
   type EnvironmentView,
@@ -28,16 +29,19 @@ export function HomePage({ client = defaultClient }: { client?: ImportWorkflowCl
   return (
     <main className="dashboard-page">
       <header className="simple-header dashboard-header">
-        <div className="home-brand"><span className="brand-mark" aria-hidden="true">G</span><span>GCA Practice</span></div>
+        <div className="home-brand"><span className="brand-mark" aria-hidden="true">G</span><span>Coding Assessment Practice</span></div>
         <nav><Link to="/history">History</Link><Link to="/settings">Settings</Link></nav>
       </header>
       <section className="dashboard-hero">
         <p className="home-eyebrow">Local assessment workspace</p>
         <h1>Practice the decisions,<br />not the setup.</h1>
-        <p>Generate, validate, and take a focused four-question coding assessment entirely on this device.</p>
+        <p>Choose a format, generate original questions, and take a focused coding assessment entirely on this device.</p>
+        <div className="preset-grid" aria-label="Assessment presets">
+          <PresetCard preset="gca" description="Classic progression from fundamentals through optimization." />
+          <PresetCard preset="roblox" description="Implementation-heavy practice with a matrix and simulation bias." />
+        </div>
         <div className="home-actions">
-          <Link className="launch-button" to="/import">Start New Practice Assessment <span>→</span></Link>
-          {active && <Link className="resume-button" to={`/assessment/${active.sessionId}`}>Resume {active.assessmentTitle} <span>{active.problemsSolved}/{active.problemCount}</span></Link>}
+          {active && <Link className="resume-button" to={`/assessment/${active.sessionId}`}>Resume {ASSESSMENT_PRESETS[active.preset].shortName}: {active.assessmentTitle} <span>{active.problemsSolved}/{active.problemCount}</span></Link>}
           <Link className="demo-link" to="/assessment/demo">Open demo workspace</Link>
         </div>
       </section>
@@ -46,7 +50,7 @@ export function HomePage({ client = defaultClient }: { client?: ImportWorkflowCl
           <div className="panel-title"><div><p className="panel-kicker">Recent</p><h2>Assessment history</h2></div><Link to="/history">View all</Link></div>
           {!history || history.completed.length === 0 ? <p className="empty-list">No completed assessments yet.</p> : history.completed.slice(0, 3).map((result) => (
             <Link className="dashboard-history-row" key={result.sessionId} to={`/results/${result.sessionId}`}>
-              <div><strong>{result.assessmentTitle}</strong><span>{result.status} · {new Date(result.finishedAt ?? result.startedAt).toLocaleDateString()}</span></div>
+              <div><strong>{result.assessmentTitle}</strong><span>{ASSESSMENT_PRESETS[result.preset].shortName} · {result.status} · {new Date(result.finishedAt ?? result.startedAt).toLocaleDateString()}</span></div>
               <b>{result.problemsSolved}/{result.problemCount}</b>
             </Link>
           ))}
@@ -60,5 +64,26 @@ export function HomePage({ client = defaultClient }: { client?: ImportWorkflowCl
         </div>
       </section>
     </main>
+  );
+}
+
+function PresetCard({
+  preset: presetId,
+  description,
+}: {
+  preset: "gca" | "roblox";
+  description: string;
+}) {
+  const preset = ASSESSMENT_PRESETS[presetId];
+  return (
+    <article className="preset-card" data-preset={preset.id}>
+      <span>{preset.shortName}</span>
+      <h2>{preset.displayName}</h2>
+      <p>{preset.problemCount} Questions · {preset.durationSeconds / 60} Minutes</p>
+      <small>{description}</small>
+      <Link className="launch-button" to={`/import?preset=${preset.id}`}>
+        Practice {preset.shortName} <span aria-hidden="true">→</span>
+      </Link>
+    </article>
   );
 }

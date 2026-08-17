@@ -18,6 +18,10 @@ const validFixtureUrl = new URL(
   import.meta.url,
 );
 const validFixtureSource = readFileSync(validFixtureUrl, "utf8");
+const validRobloxFixtureSource = readFileSync(
+  new URL("../../../fixtures/assessments/valid-roblox.json", import.meta.url),
+  "utf8",
+);
 
 function fixture(): Assessment {
   return JSON.parse(validFixtureSource) as Assessment;
@@ -49,6 +53,23 @@ describe("ReferenceSolutionValidator", () => {
     expect(result.valid).toBe(true);
     if (result.valid) {
       expect(result.assessment.assessment.problems).toHaveLength(4);
+      expect(result.errors).toEqual([]);
+    }
+  });
+
+  it("accepts the canonical Roblox fixture after executing every reference testcase", async () => {
+    const result = await validateAssessmentWithOracle(
+      validRobloxFixtureSource,
+      validator,
+    );
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.assessment.assessment).toMatchObject({
+        preset: "roblox",
+        durationSeconds: 3_000,
+      });
+      expect(result.assessment.assessment.problems).toHaveLength(2);
       expect(result.errors).toEqual([]);
     }
   });

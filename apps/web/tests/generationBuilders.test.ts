@@ -22,6 +22,7 @@ describe("Phase 9 prompt builders", () => {
     expect(prompt).toContain("publicly documented CodeSignal example questions");
     expect(prompt).toContain("REQUIRED JSON SHAPE");
     expect(prompt).toContain('"durationSeconds": 4200');
+    expect(prompt).toContain('"preset": "gca"');
     expect(prompt).toContain("2–4 visible tests");
     expect(prompt).toContain("below 2 MB");
     expect(prompt).toContain("portable identifier");
@@ -36,9 +37,61 @@ describe("Phase 9 prompt builders", () => {
     expect(prompt).toContain("(array<int>) -> int");
   });
 
+  it("builds a dedicated Roblox prompt without GCA-only constraints", () => {
+    const prompt = new GenerationPromptBuilder("roblox").build([]);
+
+    expect(prompt).toContain('"preset": "roblox"');
+    expect(prompt).toContain('"durationSeconds": 3000');
+    expect(prompt).toContain("exactly two single-function problems");
+    expect(prompt).toContain("Slots must be exactly 1 and 2");
+    expect(prompt).toContain("50-minute");
+    expect(prompt).toContain("implementation");
+    expect(prompt).toContain("matrix");
+    expect(prompt).toContain("2D array");
+    expect(prompt).toContain("simulation");
+    expect(prompt).toContain("optimization");
+    expect(prompt).toContain("reported or leaked Roblox assessment question");
+    expect(prompt).toContain("proprietary CodeSignal problem");
+    expect(prompt).toContain("interview-post reconstruction");
+    expect(prompt).toContain("known LeetCode problem");
+    expect(prompt).not.toContain("exactly four problems");
+    expect(prompt).not.toContain("slots 1 through 4");
+    expect(prompt).not.toContain('durationSeconds": 4200');
+    expect(prompt).not.toContain("70-minute assessment");
+  });
+
   it("builds a useful empty avoidance manifest", () => {
     expect(new AvoidanceManifestBuilder().build([])).toContain(
       "No prior imported problems",
+    );
+  });
+
+  it("weights same-preset history while allowing cross-preset topic overlap", () => {
+    const prompt = new GenerationPromptBuilder("roblox").build([
+      {
+        preset: "roblox",
+        title: "Settling Columns",
+        conceptSummary: "Simulate tokens moving through a grid.",
+        patternTags: ["matrix", "simulation"],
+        complexity: "O(rows * columns)",
+        signatureShape: "(array<array<int>>) -> array<array<int>>",
+      },
+      {
+        preset: "gca",
+        title: "Matrix Border",
+        conceptSummary: "Read the border cells of a matrix.",
+        patternTags: ["matrix"],
+        complexity: "O(rows + columns)",
+        signatureShape: "(array<array<int>>) -> int",
+      },
+    ]);
+
+    expect(prompt).toContain("SAME-PRESET HISTORY (roblox)");
+    expect(prompt).toContain("strongly avoid repeating these concepts");
+    expect(prompt).toContain("OTHER-PRESET HISTORY");
+    expect(prompt).toContain("general topic overlap is allowed");
+    expect(prompt.indexOf("Settling Columns")).toBeLessThan(
+      prompt.indexOf("Matrix Border"),
     );
   });
 

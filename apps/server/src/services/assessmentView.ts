@@ -1,4 +1,8 @@
-import type { Assessment } from "@gca-practice/contracts";
+import {
+  resolveAssessmentPreset,
+  type Assessment,
+  type AssessmentPresetId,
+} from "@gca-practice/contracts";
 import type { PersistedAssessment } from "../persistence/repositories/AssessmentRepository.js";
 
 export interface SafeProblemView {
@@ -14,6 +18,7 @@ export interface SafeProblemView {
 }
 
 export interface SafeAssessmentDraftView {
+  preset: AssessmentPresetId;
   title: string;
   durationSeconds: number;
   problems: SafeProblemView[];
@@ -27,6 +32,7 @@ export function assessmentDraftToView(
   assessment: Assessment,
 ): SafeAssessmentDraftView {
   return {
+    preset: resolveAssessmentPreset(assessment.assessment).id,
     title: assessment.assessment.title,
     durationSeconds: assessment.assessment.durationSeconds,
     problems: assessment.assessment.problems.map((problem) => ({

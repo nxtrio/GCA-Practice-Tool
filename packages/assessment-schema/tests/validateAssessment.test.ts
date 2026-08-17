@@ -16,6 +16,10 @@ const invalidJsonFixtureUrl = new URL(
   import.meta.url,
 );
 const validFixtureSource = readFileSync(validFixtureUrl, "utf8");
+const validRobloxFixtureSource = readFileSync(
+  new URL("../../../fixtures/assessments/valid-roblox.json", import.meta.url),
+  "utf8",
+);
 
 function fixture(): Assessment {
   return JSON.parse(validFixtureSource) as Assessment;
@@ -43,6 +47,68 @@ describe("validateAssessment", () => {
       expect(result.assessment.assessment.problems).toHaveLength(4);
       expect(result.errors).toEqual([]);
     }
+  });
+
+  it("accepts explicit GCA and resolves the legacy GCA shape", () => {
+    const legacy = fixture();
+    expect(legacy.assessment.preset).toBeUndefined();
+    expect(validateDocument(legacy).valid).toBe(true);
+
+    legacy.assessment.preset = "gca";
+    expect(validateDocument(legacy).valid).toBe(true);
+  });
+
+  it("accepts a two-problem 50-minute Roblox assessment", () => {
+    const result = validateAssessment(validRobloxFixtureSource);
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.assessment.assessment).toMatchObject({
+        preset: "roblox",
+        durationSeconds: 3_000,
+      });
+      expect(result.assessment.assessment.problems).toHaveLength(2);
+    }
+  });
+
+  it("rejects Roblox assessments with the wrong problem count", () => {
+    const document = JSON.parse(validRobloxFixtureSource) as Assessment;
+    const p3 = structuredClone(document.assessment.problems[0]!);
+    const p4 = structuredClone(document.assessment.problems[1]!);
+    Object.assign(p3, { id: "p3", slot: 3 });
+    Object.assign(p4, { id: "p4", slot: 4 });
+    document.assessment.problems.push(p3, p4);
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "problem_count",
+      path: "/assessment/problems",
+      message: "Roblox Coding Assessment requires exactly 2 problems; received 4.",
+    });
+  });
+
+  it("rejects Roblox assessments with the wrong duration", () => {
+    const document = JSON.parse(validRobloxFixtureSource) as Assessment;
+    document.assessment.durationSeconds = 4_200;
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "invalid_duration",
+      path: "/assessment/durationSeconds",
+      message: "Roblox Coding Assessment must last exactly 3000 seconds (50 minutes).",
+    });
+  });
+
+  it("rejects Roblox assessments unless their slots are exactly 1 and 2", () => {
+    const document = JSON.parse(validRobloxFixtureSource) as Assessment;
+    document.assessment.problems[1]!.slot = 3;
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "invalid_slots",
+      path: "/assessment/problems",
+      message: "Roblox Coding Assessment requires problem slots 1 and 2.",
+    });
   });
 
   it("reports malformed JSON with its distinct stage and location", () => {
@@ -129,7 +195,7 @@ describe("validateAssessment", () => {
       code: "problem_count",
       path: "/assessment/problems",
       message:
-        "Exactly four problems are required for the default GCA preset; received 3.",
+        "General Coding Assessment requires exactly 4 problems; received 3.",
     });
   });
 

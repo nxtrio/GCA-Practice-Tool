@@ -14,6 +14,7 @@ const result: AssessmentResultView = {
   sessionId: "session-1",
   assessmentId: "assessment-1",
   assessmentTitle: "Sunday Practice",
+  preset: "gca",
   status: "completed",
   startedAt: "2026-08-16T12:00:00.000Z",
   expiresAt: "2026-08-16T13:10:00.000Z",
@@ -52,7 +53,7 @@ describe("Phase 10 result and history pages", () => {
 
   it("links unfinished sessions for resume and completed sessions to results", async () => {
     const client = partialClient({ history: vi.fn(async () => ({
-      unfinished: [{ sessionId: "active-1", assessmentTitle: "Active Practice", startedAt: result.startedAt, expiresAt: result.expiresAt, problemsSolved: 1, problemCount: 4 }],
+      unfinished: [{ sessionId: "active-1", assessmentTitle: "Active Practice", preset: "gca" as const, startedAt: result.startedAt, expiresAt: result.expiresAt, problemsSolved: 1, problemCount: 4 }],
       completed: [result],
     })) });
     render(<MemoryRouter><HistoryPage client={client} /></MemoryRouter>);
@@ -121,6 +122,58 @@ describe("Phase 10 result and history pages", () => {
 
     expect(startSession).toHaveBeenCalledWith("assessment-1");
     expect(await screen.findByText("Fresh assessment session")).toBeDefined();
+  });
+
+  it("labels Roblox results and history without GCA branding", async () => {
+    const robloxResult: AssessmentResultView = {
+      ...result,
+      assessmentTitle: "Roblox Practice Set",
+      preset: "roblox",
+      problemsSolved: 1,
+      problemCount: 2,
+      problems: result.problems.slice(0, 2),
+    };
+    const resultsRender = render(
+      <MemoryRouter initialEntries={["/results/session-1"]}>
+        <Routes>
+          <Route
+            path="/results/:sessionId"
+            element={<ResultsPage client={partialClient({ results: vi.fn(async () => robloxResult) })} />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Roblox Practice Set")).toBeDefined();
+    expect(screen.getByText(/Roblox Coding Assessment · Assessment complete/)).toBeDefined();
+    expect(screen.getByRole("link", { name: "Roblox Practice" })).toBeDefined();
+    expect(screen.queryByText("GCA Practice")).toBeNull();
+    resultsRender.unmount();
+
+    render(
+      <MemoryRouter>
+        <HistoryPage
+          client={partialClient({
+            history: vi.fn(async () => ({
+              unfinished: [{
+                sessionId: "roblox-active",
+                assessmentTitle: "Roblox Active Set",
+                preset: "roblox" as const,
+                startedAt: result.startedAt,
+                expiresAt: result.expiresAt,
+                problemsSolved: 0,
+                problemCount: 2,
+              }],
+              completed: [robloxResult],
+            })),
+          })}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Roblox Active Set")).toBeDefined();
+    expect(screen.getAllByText(/Roblox ·/)).toHaveLength(2);
+    expect(screen.queryByText("GCA Practice")).toBeNull();
   });
 });
 

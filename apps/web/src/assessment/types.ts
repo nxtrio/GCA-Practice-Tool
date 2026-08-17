@@ -1,4 +1,5 @@
 import type {
+  AssessmentPresetId,
   FunctionSignature,
   GenerationMetadata,
   ProblemExample,
@@ -20,6 +21,7 @@ export interface AssessmentProblemView {
 
 export interface AssessmentView {
   id: string;
+  preset: AssessmentPresetId;
   title: string;
   durationSeconds: number;
   problems: AssessmentProblemView[];

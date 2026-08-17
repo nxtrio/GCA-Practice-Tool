@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve GCA Practice.
+Thanks for helping improve Coding Assessment Practice.
 
 1. Read the [implementation specification](implementation-plans/gca_practice_codex_implementation_spec.md).
 2. Keep the application local, single-user, and within its existing architecture.

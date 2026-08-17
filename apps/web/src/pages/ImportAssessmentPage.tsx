@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  ASSESSMENT_PRESETS,
+  type AssessmentPresetId,
+} from "@gca-practice/contracts";
 import {
   ApiImportWorkflowClient,
   type EnvironmentView,
@@ -24,31 +28,38 @@ export function ImportAssessmentPage({
   client = defaultClient,
 }: ImportAssessmentPageProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const presetId: AssessmentPresetId = searchParams.get("preset") === "roblox"
+    ? "roblox"
+    : "gca";
+  const preset = ASSESSMENT_PRESETS[presetId];
   const [source, setSource] = useState("");
   const [state, setState] = useState<ValidationState>({ status: "empty" });
-  const [historyPrompt, setHistoryPrompt] = useState(() =>
-    new GenerationPromptBuilder().build([]),
-  );
+  const [problemHistory, setProblemHistory] = useState<Awaited<ReturnType<ImportWorkflowClient["problemHistory"]>>>([]);
   const [copyNotice, setCopyNotice] = useState<string>();
   const [starting, setStarting] = useState(false);
   const [trustedSource, setTrustedSource] = useState(false);
   const [environment, setEnvironment] = useState<EnvironmentView>();
   const validationSequence = useRef(0);
-  const generationBuilder = useMemo(() => new GenerationPromptBuilder(), []);
+  const generationBuilder = useMemo(() => new GenerationPromptBuilder(presetId), [presetId]);
   const repairBuilder = useMemo(() => new RepairPromptBuilder(), []);
+  const historyPrompt = useMemo(
+    () => generationBuilder.build(problemHistory),
+    [generationBuilder, problemHistory],
+  );
 
   useEffect(() => {
     let active = true;
-    void client.problemHistory().then(
+    void client.problemHistory(presetId).then(
       (history) => {
-        if (active) setHistoryPrompt(generationBuilder.build(history));
+        if (active) setProblemHistory(history);
       },
       () => {
         // Prompt generation remains useful when history cannot be loaded.
       },
     );
     return () => { active = false; };
-  }, [client, generationBuilder]);
+  }, [client, presetId]);
 
   useEffect(() => {
     let active = true;
@@ -125,16 +136,16 @@ export function ImportAssessmentPage({
       <header className="import-header">
         <Link className="home-brand import-brand" to="/">
           <span className="brand-mark" aria-hidden="true">G</span>
-          <span>GCA Practice</span>
+          <span>Coding Practice</span>
         </Link>
-        <span className="import-step">New assessment</span>
+        <span className="import-step">New {preset.shortName} assessment</span>
       </header>
       <div className="import-layout">
         <section className="import-intro">
-          <p className="home-eyebrow">Assessment generator</p>
-          <h1>From prompt to practice in minutes.</h1>
+          <p className="home-eyebrow">{preset.displayName}</p>
+          <h1>New {preset.practiceName}.</h1>
           <p>
-            Copy a purpose-built prompt into your preferred LLM, then upload or
+            {preset.problemCount} questions · {preset.durationSeconds / 60} minutes. Copy a purpose-built prompt into your preferred LLM, then upload or
             paste its JSON response here. The local validator checks structure and runs
             every Python reference answer before anything is saved.
           </p>
@@ -148,7 +159,7 @@ export function ImportAssessmentPage({
             type="button"
             onClick={() => void copy(historyPrompt, "Generation prompt")}
           >
-            Copy Generation Prompt
+            Copy {preset.shortName} Generation Prompt
           </button>
           <details className="prompt-preview">
             <summary>Preview generation prompt</summary>
@@ -180,6 +191,7 @@ export function ImportAssessmentPage({
             state={state}
             starting={starting}
             environment={environment}
+            expectedPreset={preset}
             onCopyRepairPrompt={copyRepairPrompt}
             onStartAssessment={() => void startAssessment()}
           />

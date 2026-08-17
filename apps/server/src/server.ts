@@ -64,6 +64,7 @@ const app = createApp({
   completionService,
   resultsService,
   ...(importWorkflowService ? { importWorkflowService } : {}),
+  assessments,
   problemCatalog,
   sessionService,
   toolchains: runnerRegistry.toolchains,
@@ -71,7 +72,7 @@ const app = createApp({
 });
 
 const server = app.listen(port, "127.0.0.1", () => {
-  console.log(`GCA Practice API listening at http://127.0.0.1:${port}`);
+  console.log(`Coding Assessment Practice API listening at http://127.0.0.1:${port}`);
 });
 
 function shutdown(): void {

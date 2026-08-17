@@ -19,6 +19,10 @@ const fixture = JSON.parse(readFileSync(
   new URL("../../../fixtures/assessments/valid-gca.json", import.meta.url),
   "utf8",
 )) as Assessment;
+const robloxFixture = JSON.parse(readFileSync(
+  new URL("../../../fixtures/assessments/valid-roblox.json", import.meta.url),
+  "utf8",
+)) as Assessment;
 
 describe("Phase 10 completion and history", () => {
   let directory: string;
@@ -137,6 +141,31 @@ describe("Phase 10 completion and history", () => {
     expect(result.timeRemainingMs).toBe(0);
     expect(result.timeUsedMs).toBe(70 * 60 * 1_000);
     expect(sessions.findById(session.id)?.finishedAt).toBe(session.expiresAt);
+  });
+
+  it("labels Roblox results, history, and readiness exports with their preset", async () => {
+    const assessment = assessments.save(robloxFixture);
+    const session = sessionService.startSession(assessment.id);
+    nowMs += 5 * 60 * 1_000;
+
+    const result = await completionService.complete(session.id);
+
+    expect(result).toMatchObject({
+      assessmentTitle: "Roblox Coding Practice Fixture",
+      preset: "roblox",
+      problemCount: 2,
+    });
+    expect(resultsService.history().completed[0]).toMatchObject({
+      preset: "roblox",
+      problemCount: 2,
+    });
+    expect(resultsService.analysisExport(session.id)).toMatchObject({
+      kind: "roblox_practice_readiness_analysis",
+      assessment: { preset: "roblox", summary: { problemCount: 2 } },
+      analysisRequest: {
+        objective: expect.stringContaining("Roblox Coding Assessment"),
+      },
+    });
   });
 
   function nextId(): string { return `id-${++identifiers}`; }

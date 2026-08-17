@@ -19,6 +19,10 @@ const fixtureSource = readFileSync(
   new URL("../../../fixtures/assessments/valid-gca.json", import.meta.url),
   "utf8",
 );
+const robloxFixtureSource = readFileSync(
+  new URL("../../../fixtures/assessments/valid-roblox.json", import.meta.url),
+  "utf8",
+);
 const acceptingOracle: AssessmentOracleValidator = {
   async validate() { return { valid: true, errors: [] }; },
 };
@@ -60,6 +64,7 @@ describe("Phase 9 import and session API", () => {
     );
     const running = await listen(createApp({
       importWorkflowService: workflow,
+      assessments,
       problemCatalog: new ProblemCatalogRepository(database),
       sessionService: sessions,
     }));
@@ -68,20 +73,58 @@ describe("Phase 9 import and session API", () => {
     const validationResponse = await post(running.origin, "/api/assessments/validate", { source: fixtureSource });
     expect(validationResponse.status).toBe(200);
     const validation = await validationResponse.json() as Record<string, unknown>;
-    expect(validation).toMatchObject({ valid: true, validationId: "validation-1" });
+    expect(validation).toMatchObject({
+      valid: true,
+      validationId: "validation-1",
+      assessment: { preset: "gca", durationSeconds: 4_200 },
+    });
     expect(JSON.stringify(validation)).not.toContain("referenceSolution");
     expect(JSON.stringify(validation)).not.toContain('"hidden"');
 
     const importResponse = await post(running.origin, "/api/assessments/import", { validationId: "validation-1" });
     expect(importResponse.status).toBe(201);
-    const assessment = await importResponse.json() as { id: string };
-    expect(assessment.id).toBe("assessment-1");
+    const assessment = await importResponse.json() as { id: string; preset: string };
+    expect(assessment).toMatchObject({ id: "assessment-1", preset: "gca" });
 
     const duplicateResponse = await post(running.origin, "/api/assessments/validate", { source: fixtureSource });
     const duplicateValidation = await duplicateResponse.json() as { warnings: string[] };
     expect(duplicateValidation.warnings).toContain(
       "Array Total exactly duplicates a previously imported problem.",
     );
+
+    const robloxValidationResponse = await post(
+      running.origin,
+      "/api/assessments/validate",
+      { source: robloxFixtureSource },
+    );
+    const robloxValidation = await robloxValidationResponse.json() as {
+      valid: boolean;
+      validationId: string;
+      assessment: { preset: string };
+    };
+    expect(robloxValidation).toMatchObject({
+      valid: true,
+      assessment: { preset: "roblox" },
+    });
+    const robloxImportResponse = await post(
+      running.origin,
+      "/api/assessments/import",
+      { validationId: robloxValidation.validationId },
+    );
+    expect(robloxImportResponse.status).toBe(201);
+
+    const gcaCatalog = await fetch(`${running.origin}/api/problem-catalog?preset=gca`);
+    const robloxCatalog = await fetch(`${running.origin}/api/problem-catalog?preset=roblox`);
+    const gcaHistory = await gcaCatalog.json() as Array<{ preset: string }>;
+    const robloxHistory = await robloxCatalog.json() as Array<{ preset: string }>;
+    expect(gcaHistory).toHaveLength(6);
+    expect(gcaHistory.slice(0, 4).map(({ preset }) => preset)).toEqual([
+      "gca", "gca", "gca", "gca",
+    ]);
+    expect(robloxHistory).toHaveLength(6);
+    expect(robloxHistory.slice(0, 2).map(({ preset }) => preset)).toEqual([
+      "roblox", "roblox",
+    ]);
 
     const sessionResponse = await post(running.origin, "/api/sessions", { assessmentId: assessment.id });
     expect(sessionResponse.status).toBe(201);

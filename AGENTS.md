@@ -1,12 +1,20 @@
 # Agent Instructions
 
-The authoritative implementation specification for this repository is:
+The foundational implementation specification for this repository is:
 
 implementation-plans/gca_practice_codex_implementation_spec.md
 
-Read it before making architectural or implementation decisions.
+The assessment-preset expansion specification is:
 
-Implement the project according to its ordered phases.
+implementation-plans/assessment_presets_roblox_expansion.md
+
+Read both before making architectural or implementation decisions. The preset
+expansion specification supersedes the original GCA-only assumptions wherever
+the two conflict; the original specification remains authoritative for shared
+architecture, execution, validation, and security boundaries.
+
+Implement the project according to the applicable specification's ordered
+phases and priorities.
 
 Do not:
 - introduce infrastructure explicitly rejected by the specification

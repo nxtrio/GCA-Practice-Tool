@@ -15,7 +15,7 @@ export function SettingsPage() {
   };
   return (
     <main className="list-page">
-      <header className="simple-header"><Link className="home-brand import-brand" to="/"><span className="brand-mark">G</span><span>GCA Practice</span></Link></header>
+      <header className="simple-header"><Link className="home-brand import-brand" to="/"><span className="brand-mark" aria-hidden="true">G</span><span>Coding Practice</span></Link></header>
       <div className="settings-card">
         <p className="home-eyebrow">Workspace preferences</p><h1>Editor settings</h1>
         <label><span>Font size</span><input type="number" min="11" max="22" value={settings.fontSize} onChange={(event) => update("fontSize", Number(event.target.value))} /></label>

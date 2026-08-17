@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://gca-practice.local/schemas/assessment-1.0.json",
-  "title": "GCA Practice Assessment",
+  "title": "Coding Practice Assessment",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "assessment"],
@@ -19,6 +19,9 @@
       "additionalProperties": false,
       "required": ["title", "durationSeconds", "problems"],
       "properties": {
+        "preset": {
+          "enum": ["gca", "roblox"]
+        },
         "title": {
           "type": "string",
           "minLength": 1
@@ -307,4 +310,3 @@
     }
   }
 }
-

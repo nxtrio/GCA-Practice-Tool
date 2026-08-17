@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ASSESSMENT_PRESETS } from "@gca-practice/contracts";
 import {
   ApiImportWorkflowClient,
   type AssessmentResultView,
@@ -38,8 +39,8 @@ export function HistoryPage({ client = defaultClient }: { client?: ImportWorkflo
   return (
     <main className="list-page">
       <header className="simple-header">
-        <Link className="home-brand import-brand" to="/"><span className="brand-mark">G</span><span>GCA Practice</span></Link>
-        <Link className="button button--primary" to="/import">New assessment</Link>
+        <Link className="home-brand import-brand" to="/"><span className="brand-mark" aria-hidden="true">G</span><span>Coding Practice</span></Link>
+        <Link className="button button--primary" to="/">New assessment</Link>
       </header>
       <div className="list-page-content">
         <p className="home-eyebrow">Local archive</p><h1>Assessment history</h1>
@@ -52,7 +53,7 @@ export function HistoryPage({ client = defaultClient }: { client?: ImportWorkflo
               <h2>Unfinished</h2>
               {history.unfinished.length === 0 ? <p className="empty-list">No active assessment.</p> : history.unfinished.map((session) => (
                 <Link className="history-row" key={session.sessionId} to={`/assessment/${session.sessionId}`}>
-                  <div><strong>{session.assessmentTitle}</strong><span>Started {formatDate(session.startedAt)}</span></div>
+                  <div><strong>{session.assessmentTitle}</strong><span>{ASSESSMENT_PRESETS[session.preset].shortName} · Started {formatDate(session.startedAt)}</span></div>
                   <span>{session.problemsSolved}/{session.problemCount} solved</span><b>Resume →</b>
                 </Link>
               ))}
@@ -61,7 +62,7 @@ export function HistoryPage({ client = defaultClient }: { client?: ImportWorkflo
               <h2>Completed</h2>
               {history.completed.length === 0 ? <p className="empty-list">Completed assessments will appear here.</p> : history.completed.map((result) => (
                 <article className="history-row history-row--completed" key={result.sessionId}>
-                  <div><strong>{result.assessmentTitle}</strong><span>{formatDate(result.finishedAt ?? result.startedAt)} · {result.status}</span></div>
+                  <div><strong>{result.assessmentTitle}</strong><span>{ASSESSMENT_PRESETS[result.preset].shortName} · {formatDate(result.finishedAt ?? result.startedAt)} · {result.status}</span></div>
                   <span>{result.problemsSolved}/{result.problemCount} solved</span>
                   <div className="history-row-actions">
                     <Link className="button button--secondary" to={`/results/${result.sessionId}`}>View results</Link>

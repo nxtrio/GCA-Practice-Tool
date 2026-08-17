@@ -6,9 +6,17 @@ import type {
   TestCase,
   TypeSpec,
 } from "@gca-practice/contracts";
+import {
+  ASSESSMENT_PRESETS,
+  AssessmentPresetResolutionError,
+  resolveAssessmentPreset,
+  type AssessmentPreset,
+} from "@gca-practice/contracts";
 
 export type SemanticValidationCode =
+  | "invalid_preset"
   | "problem_count"
+  | "invalid_slots"
   | "duplicate_problem_id"
   | "duplicate_test_id"
   | "missing_visible_tests"
@@ -40,7 +48,6 @@ interface TypeMismatch {
 
 const INT_MIN = -2_147_483_648;
 const INT_MAX = 2_147_483_647;
-const GCA_DURATION_SECONDS = 70 * 60;
 const LIMIT_BOUNDS: Record<keyof ProblemLimits, { minimum: number; maximum: number }> = {
   executionTimeMs: { minimum: 1, maximum: 10_000 },
   compileTimeMs: { minimum: 1, maximum: 60_000 },
@@ -189,28 +196,67 @@ export function validateAssessmentSemantics(
 ): SemanticValidationIssue[] {
   const issues: SemanticValidationIssue[] = [];
   const { assessment } = assessmentDocument;
+  let preset: AssessmentPreset | undefined;
+  let presetResolutionIssue: SemanticValidationIssue | undefined;
 
-  if (assessment.problems.length !== 4) {
+  try {
+    preset = resolveAssessmentPreset(assessment);
+  } catch (error) {
+    presetResolutionIssue = {
+      stage: "semantic",
+      code: "invalid_preset",
+      path: "/assessment/preset",
+      message:
+        error instanceof AssessmentPresetResolutionError
+          ? error.message
+          : "The assessment preset could not be resolved.",
+    };
+  }
+
+  const validationPreset = preset ?? ASSESSMENT_PRESETS.gca;
+
+  if (assessment.problems.length !== validationPreset.problemCount) {
     issues.push({
       stage: "semantic",
       code: "problem_count",
       path: "/assessment/problems",
-      message:
-        "Exactly four problems are required for the default GCA preset; " +
-        `received ${assessment.problems.length}.`,
+      message: `${validationPreset.displayName} requires exactly ${validationPreset.problemCount} problems; received ${assessment.problems.length}.`,
+    });
+  }
+
+  const expectedSlots = Array.from(
+    { length: validationPreset.problemCount },
+    (_, index) => index + 1,
+  );
+  const actualSlots = assessment.problems
+    .map(({ slot }) => slot)
+    .sort((left, right) => left - right);
+  if (
+    actualSlots.length !== expectedSlots.length ||
+    actualSlots.some((slot, index) => slot !== expectedSlots[index])
+  ) {
+    issues.push({
+      stage: "semantic",
+      code: "invalid_slots",
+      path: "/assessment/problems",
+      message: `${validationPreset.displayName} requires problem slots ${formatSlotList(expectedSlots)}.`,
     });
   }
 
   if (
     !Number.isSafeInteger(assessment.durationSeconds) ||
-    assessment.durationSeconds !== GCA_DURATION_SECONDS
+    assessment.durationSeconds !== validationPreset.durationSeconds
   ) {
     issues.push({
       stage: "semantic",
       code: "invalid_duration",
       path: "/assessment/durationSeconds",
-      message: "The default GCA preset must last exactly 4200 seconds (70 minutes).",
+      message: `${validationPreset.displayName} must last exactly ${validationPreset.durationSeconds} seconds (${validationPreset.durationSeconds / 60} minutes).`,
     });
+  }
+
+  if (presetResolutionIssue) {
+    issues.push(presetResolutionIssue);
   }
 
   const problemIds = new Map<string, string>();
@@ -234,6 +280,11 @@ export function validateAssessmentSemantics(
   });
 
   return issues;
+}
+
+function formatSlotList(slots: number[]): string {
+  if (slots.length === 1) return String(slots[0]);
+  return `${slots.slice(0, -1).join(", ")} and ${slots.at(-1)}`;
 }
 
 function validateProblem(

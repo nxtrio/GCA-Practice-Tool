@@ -22,6 +22,7 @@ describe("ImportAssessmentPage", () => {
       valid: true,
       validationId: "validation-1",
       assessment: {
+        preset: "gca",
         title: demoAssessment.title,
         durationSeconds: demoAssessment.durationSeconds,
         problems: demoAssessment.problems,
@@ -47,7 +48,7 @@ describe("ImportAssessmentPage", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /I trust this assessment source/ }));
     expect(await screen.findByText("Assessment is ready", {}, { timeout: 2000 })).toBeDefined();
     expect(screen.getByText("Reference solutions verified")).toBeDefined();
-    fireEvent.click(screen.getByRole("button", { name: /Start Assessment/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Start GCA Assessment" }));
 
     expect(await screen.findByText("Assessment started")).toBeDefined();
     expect(client.importAssessment).toHaveBeenCalledWith("validation-1");
@@ -112,6 +113,37 @@ describe("ImportAssessmentPage", () => {
     });
     expect(await screen.findByText("JSON files must be 1.5 MB or smaller.")).toBeDefined();
     expect(client.validateAssessment).not.toHaveBeenCalled();
+  });
+
+  it("identifies Roblox mode and prevents starting a GCA document from it", async () => {
+    const client = fakeClient({
+      valid: true,
+      validationId: "validation-1",
+      assessment: {
+        preset: "gca",
+        title: demoAssessment.title,
+        durationSeconds: demoAssessment.durationSeconds,
+        problems: demoAssessment.problems,
+      },
+      errors: [],
+      warnings: [],
+    });
+    render(
+      <MemoryRouter initialEntries={["/import?preset=roblox"]}>
+        <ImportAssessmentPage client={client} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "New Roblox Practice." })).toBeDefined();
+    expect(screen.getByText(/2 questions · 50 minutes/)).toBeDefined();
+    expect(client.problemHistory).toHaveBeenCalledWith("roblox");
+    fireEvent.click(screen.getByRole("checkbox", { name: /I trust this assessment source/ }));
+    fireEvent.change(screen.getByLabelText("Assessment JSON"), {
+      target: { value: "{\"schemaVersion\":\"1.0\"}" },
+    });
+
+    expect(await screen.findByText(/you selected Roblox Coding Assessment/, {}, { timeout: 2_000 })).toBeDefined();
+    expect((screen.getByRole("button", { name: "Start Roblox Assessment" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("warns that imported reference code executes locally", () => {

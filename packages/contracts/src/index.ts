@@ -17,6 +17,13 @@ export type {
   ProblemLimits,
   TestCase,
 } from "./assessment.js";
+export {
+  ASSESSMENT_PRESETS,
+  AssessmentPresetResolutionError,
+  resolveAssessmentPreset,
+  type AssessmentPreset,
+  type AssessmentPresetId,
+} from "./assessmentPresets.js";
 export type {
   ExecutionVerdict,
   HiddenTestResult,

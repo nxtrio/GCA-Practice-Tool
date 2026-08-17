@@ -74,7 +74,7 @@ function SessionAssessmentRoute() {
   if (error) {
     return (
       <main className="workspace-loading workspace-error">
-        <p>{error}</p><Link to="/import">Create another assessment</Link>
+        <p>{error}</p><Link to="/">Create another assessment</Link>
       </main>
     );
   }

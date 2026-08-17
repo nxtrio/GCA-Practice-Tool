@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Language, RunResult } from "@gca-practice/contracts";
+import { ASSESSMENT_PRESETS } from "@gca-practice/contracts";
 import type { JudgeClient } from "../api/client.js";
 import type { CompletionCodeSnapshot } from "../api/importClient.js";
 import { AssessmentShell } from "../assessment/AssessmentShell.js";
@@ -53,6 +54,7 @@ export function AssessmentPage({
   availableLanguages = supportedLanguages,
   initialProblemLanguages = {},
 }: AssessmentPageProps) {
+  const preset = ASSESSMENT_PRESETS[assessment.preset];
   const [activeProblemId, setActiveProblemId] = useState(
     assessment.problems[0]?.id ?? "",
   );
@@ -231,7 +233,7 @@ export function AssessmentPage({
               G
             </span>
             <div>
-              <span>GCA Practice</span>
+              <span>{preset.practiceName}</span>
               <small>{assessment.title}</small>
             </div>
           </div>

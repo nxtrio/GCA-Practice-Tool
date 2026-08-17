@@ -1,6 +1,6 @@
 # Security
 
-GCA Practice is a single-user, localhost application. It is not a security
+Coding Assessment Practice is a single-user, localhost application. It is not a security
 sandbox and must never be exposed as a network service.
 
 ## Native code execution

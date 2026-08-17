@@ -7,6 +7,7 @@ The goal is to reproduce the **style, pacing, implementation demands, constraint
 * Return valid JSON only.
 * Do not use Markdown, commentary, or code fences.
 * Use `"schemaVersion": "1.0"`.
+* Use `"preset": "gca"` inside the assessment object.
 * Use `"durationSeconds": 4200`.
 * Generate exactly four single-function problems.
 * Keep the entire UTF-8 JSON response comfortably below 2 MB (target at most 1.5 MB) so JSON request encoding cannot exceed the local importer limit.
@@ -68,6 +69,7 @@ with parameters exactly corresponding to the problem signature.
 {
 "schemaVersion": "1.0",
 "assessment": {
+"preset": "gca",
 "title": "...",
 "durationSeconds": 4200,
 "problems": [

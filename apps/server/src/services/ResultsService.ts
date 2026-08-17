@@ -1,9 +1,14 @@
 import type {
+  AssessmentPresetId,
   Language,
   Problem,
   RunResult,
   Session,
   Submission,
+} from "@gca-practice/contracts";
+import {
+  ASSESSMENT_PRESETS,
+  resolveAssessmentPreset,
 } from "@gca-practice/contracts";
 import type { AssessmentRepository } from "../persistence/repositories/AssessmentRepository.js";
 import type { SessionRepository } from "../persistence/repositories/SessionRepository.js";
@@ -28,6 +33,7 @@ export interface AssessmentResultSummary {
   sessionId: string;
   assessmentId: string;
   assessmentTitle: string;
+  preset: AssessmentPresetId;
   status: Session["status"];
   startedAt: string;
   expiresAt: string;
@@ -44,6 +50,7 @@ export interface AssessmentResultSummary {
 export interface UnfinishedSessionSummary {
   sessionId: string;
   assessmentTitle: string;
+  preset: AssessmentPresetId;
   startedAt: string;
   expiresAt: string;
   problemsSolved: number;
@@ -93,7 +100,7 @@ export interface ReadinessAnalysisProblem {
 
 export interface ReadinessAnalysisExport {
   schemaVersion: "1.0";
-  kind: "gca_practice_readiness_analysis";
+  kind: "gca_practice_readiness_analysis" | "roblox_practice_readiness_analysis";
   generatedAt: string;
   privacy: {
     hiddenTestDetailsIncluded: false;
@@ -104,6 +111,7 @@ export interface ReadinessAnalysisExport {
     sessionId: string;
     assessmentId: string;
     title: string;
+    preset: AssessmentPresetId;
     status: "completed" | "expired";
     timing: {
       durationMs: number;
@@ -167,11 +175,13 @@ export class ResultsService {
     const endMs = completionTime(session, this.now().getTime());
     const startedMs = Date.parse(session.startedAt);
     const expiresMs = Date.parse(session.expiresAt);
+    const preset = resolveAssessmentPreset(assessment.assessment.assessment).id;
 
     return {
       sessionId: session.id,
       assessmentId: assessment.id,
       assessmentTitle: assessment.title,
+      preset,
       status: session.status,
       startedAt: session.startedAt,
       expiresAt: session.expiresAt,
@@ -196,6 +206,7 @@ export class ResultsService {
           return {
             sessionId: session.id,
             assessmentTitle: result.assessmentTitle,
+            preset: result.preset,
             startedAt: result.startedAt,
             expiresAt: result.expiresAt,
             problemsSolved: result.problemsSolved,
@@ -222,10 +233,13 @@ export class ResultsService {
     const submissions = this.submissions.listForSession(sessionId);
     const latest = latestSubmissions(submissions);
     const code = this.sessions.listCode(sessionId);
+    const preset = ASSESSMENT_PRESETS[summary.preset];
 
     return {
       schemaVersion: "1.0",
-      kind: "gca_practice_readiness_analysis",
+      kind: summary.preset === "roblox"
+        ? "roblox_practice_readiness_analysis"
+        : "gca_practice_readiness_analysis",
       generatedAt: this.now().toISOString(),
       privacy: {
         hiddenTestDetailsIncluded: false,
@@ -240,6 +254,7 @@ export class ResultsService {
         sessionId,
         assessmentId: summary.assessmentId,
         title: summary.assessmentTitle,
+        preset: summary.preset,
         status: summary.status,
         timing: {
           durationMs: Date.parse(summary.expiresAt) - Date.parse(summary.startedAt),
@@ -305,7 +320,7 @@ export class ResultsService {
       },
       analysisRequest: {
         objective:
-          "Assess the candidate's readiness for a timed General Coding Assessment and provide evidence-based recommendations.",
+          `Assess the candidate's readiness for a timed ${preset.displayName} and provide evidence-based recommendations.`,
         requestedSections: [
           "overall readiness assessment",
           "correctness and edge-case handling",

@@ -2,6 +2,7 @@ import type { AssessmentView } from "./types.js";
 
 export const demoAssessment: AssessmentView = {
   id: "demo-gca",
+  preset: "gca",
   title: "GCA Practice · Focus Session",
   durationSeconds: 4_200,
   problems: [
