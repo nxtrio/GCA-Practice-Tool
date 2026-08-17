@@ -23,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nxtrio/CodeSignalClone.git"
+    "url": "git+https://github.com/nxtrio/GCA-Practice-tool.git"
   },
   "bugs": {
-    "url": "https://github.com/nxtrio/CodeSignalClone/issues"
+    "url": "https://github.com/nxtrio/GCA-Practice-tool/issues"
   },
-  "homepage": "https://github.com/nxtrio/CodeSignalClone#readme",
+  "homepage": "https://github.com/nxtrio/GCA-Practice-tool#readme",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/node": "26.2.0",

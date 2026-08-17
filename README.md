@@ -9,8 +9,8 @@ A local coding-assessment simulator with realistic timed sessions, native Java/C
 Requires Node.js 22+ and npm 10+. Python 3 is required to validate imported assessments; install a JDK and C++ compiler to enable Java and C++ submissions.
 
 ```sh
-git clone https://github.com/nxtrio/CodeSignalClone.git gca-practice
-cd gca-practice
+git clone https://github.com/nxtrio/GCA-Practice-tool.git
+cd GCA-Practice-tool
 npm start
 ```
 
