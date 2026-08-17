@@ -1,0 +1,67 @@
+// @vitest-environment jsdom
+
+import { cleanup, render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { AssessmentResultView, ImportWorkflowClient } from "../src/api/importClient.ts";
+import { HistoryPage } from "../src/pages/HistoryPage.tsx";
+import { ResultsPage } from "../src/pages/ResultsPage.tsx";
+
+afterEach(() => cleanup());
+
+const result: AssessmentResultView = {
+  sessionId: "session-1",
+  assessmentId: "assessment-1",
+  assessmentTitle: "Sunday Practice",
+  status: "completed",
+  startedAt: "2026-08-16T12:00:00.000Z",
+  expiresAt: "2026-08-16T13:10:00.000Z",
+  finishedAt: "2026-08-16T13:05:42.000Z",
+  problemsSolved: 3,
+  problemCount: 4,
+  testsPassed: 72,
+  testsTotal: 81,
+  timeUsedMs: 3_942_000,
+  timeRemainingMs: 258_000,
+  problems: [
+    { problemId: "p1", slot: 1, title: "Array Total", verdict: "accepted", passed: 15, total: 15, language: "python" },
+    { problemId: "p2", slot: 2, title: "Mirror Text", verdict: "accepted", passed: 18, total: 18, language: "java" },
+    { problemId: "p3", slot: 3, title: "Matrix Total", verdict: "wrong_answer", passed: 14, total: 20, language: "cpp" },
+    { problemId: "p4", slot: 4, title: "All Flags", verdict: "accepted", passed: 25, total: 28, language: "python" },
+  ],
+};
+
+describe("Phase 10 result and history pages", () => {
+  it("renders the required final summary and problem breakdown", async () => {
+    const client = partialClient({ results: vi.fn(async () => result) });
+    render(<MemoryRouter initialEntries={["/results/session-1"]}><Routes><Route path="/results/:sessionId" element={<ResultsPage client={client} />} /></Routes></MemoryRouter>);
+
+    expect(await screen.findByText("Sunday Practice")).toBeDefined();
+    expect(screen.getByText("3 / 4")).toBeDefined();
+    expect(screen.getByText("72 / 81")).toBeDefined();
+    expect(screen.getByText("1:05:42")).toBeDefined();
+    expect(screen.getByText("04:18")).toBeDefined();
+    expect(screen.getByText("14/20")).toBeDefined();
+    const exportLink = screen.getByRole("link", { name: "Export analysis JSON" });
+    expect(exportLink.getAttribute("href")).toBe("/api/sessions/session-1/export");
+    expect(exportLink.getAttribute("download")).toBe(
+      "sunday-practice-readiness-analysis.json",
+    );
+  });
+
+  it("links unfinished sessions for resume and completed sessions to results", async () => {
+    const client = partialClient({ history: vi.fn(async () => ({
+      unfinished: [{ sessionId: "active-1", assessmentTitle: "Active Practice", startedAt: result.startedAt, expiresAt: result.expiresAt, problemsSolved: 1, problemCount: 4 }],
+      completed: [result],
+    })) });
+    render(<MemoryRouter><HistoryPage client={client} /></MemoryRouter>);
+
+    expect(await screen.findByText("Active Practice")).toBeDefined();
+    expect(screen.getByRole("link", { name: /Active Practice/ }).getAttribute("href")).toBe("/assessment/active-1");
+    expect(screen.getByRole("link", { name: /Sunday Practice/ }).getAttribute("href")).toBe("/results/session-1");
+  });
+});
+
+function partialClient(methods: Partial<ImportWorkflowClient>): ImportWorkflowClient {
+  return methods as ImportWorkflowClient;
+}

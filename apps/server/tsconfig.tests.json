@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node", "vitest/globals"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
+}

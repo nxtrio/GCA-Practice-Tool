@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+/apps/server/data/
+.codex
+.test-screenshots
+.playwright-mcp
+playwright-report/
+test-results/
+blob-report/

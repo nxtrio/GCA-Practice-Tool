@@ -1,0 +1,310 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gca-practice.local/schemas/assessment-1.0.json",
+  "title": "GCA Practice Assessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "assessment"],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "assessment": {
+      "$ref": "#/definitions/assessmentDefinition"
+    }
+  },
+  "definitions": {
+    "assessmentDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "durationSeconds", "problems"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "durationSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "problems": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/problem"
+          }
+        }
+      }
+    },
+    "problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slot",
+        "title",
+        "generationMetadata",
+        "description",
+        "constraints",
+        "signature",
+        "examples",
+        "limits",
+        "tests",
+        "validation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generationMetadata": {
+          "$ref": "#/definitions/generationMetadata"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "signature": {
+          "$ref": "#/definitions/signature"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/example"
+          }
+        },
+        "limits": {
+          "$ref": "#/definitions/limits"
+        },
+        "tests": {
+          "$ref": "#/definitions/testCollections"
+        },
+        "validation": {
+          "$ref": "#/definitions/referenceValidation"
+        }
+      }
+    },
+    "generationMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conceptSummary",
+        "skills",
+        "expectedComplexity",
+        "patternTags"
+      ],
+      "properties": {
+        "conceptSummary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expectedComplexity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "patternTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "parameters", "returnType"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/parameter"
+          }
+        },
+        "returnType": {
+          "$ref": "#/definitions/typeSpec"
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "$ref": "#/definitions/typeSpec"
+        }
+      }
+    },
+    "typeSpec": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": {
+              "enum": ["int", "long", "boolean", "string"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "items"],
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "items": {
+              "$ref": "#/definitions/typeSpec"
+            }
+          }
+        }
+      ]
+    },
+    "jsonValue": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        }
+      ]
+    },
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["arguments", "output", "explanation"],
+      "properties": {
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        },
+        "output": {
+          "$ref": "#/definitions/jsonValue"
+        },
+        "explanation": {
+          "type": "string"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executionTimeMs", "compileTimeMs", "outputLimitBytes"],
+      "properties": {
+        "executionTimeMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "compileTimeMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "outputLimitBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "testCollections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visible", "hidden"],
+      "properties": {
+        "visible": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/testCase"
+          }
+        },
+        "hidden": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/testCase"
+          }
+        }
+      }
+    },
+    "testCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "arguments", "expected", "category"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jsonValue"
+          }
+        },
+        "expected": {
+          "$ref": "#/definitions/jsonValue"
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "referenceValidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["referenceLanguage", "referenceSolution"],
+      "properties": {
+        "referenceLanguage": {
+          "const": "python"
+        },
+        "referenceSolution": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
+

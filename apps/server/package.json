@@ -1,0 +1,26 @@
+{
+  "name": "@gca-practice/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx watch src/server.ts",
+    "serve": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.tests.json --pretty false"
+  },
+  "dependencies": {
+    "@gca-practice/assessment-schema": "0.0.0",
+    "@gca-practice/contracts": "0.0.0",
+    "@gca-practice/runner-core": "0.0.0",
+    "better-sqlite3": "13.0.3",
+    "express": "5.2.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
+    "@types/express": "5.0.6",
+    "tsx": "4.23.12"
+  }
+}

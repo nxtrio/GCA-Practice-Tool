@@ -1,0 +1,23 @@
+{
+  "name": "@gca-practice/runner-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false && tsc -p tsconfig.tests.json --pretty false"
+  },
+  "dependencies": {
+    "@gca-practice/contracts": "0.0.0"
+  }
+}

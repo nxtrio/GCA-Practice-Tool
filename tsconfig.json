@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/contracts" },
+    { "path": "./packages/assessment-schema" },
+    { "path": "./packages/runner-core" },
+    { "path": "./apps/server" },
+    { "path": "./apps/web" }
+  ]
+}
+

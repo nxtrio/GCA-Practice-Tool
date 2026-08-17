@@ -1,0 +1,44 @@
+{
+  "name": "gca-practice",
+  "version": "0.0.0",
+  "description": "A local GCA-style coding assessment simulator with native Java, C++, and Python runners.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b && npm run build:bundle --workspace @gca-practice/web",
+    "clean": "tsc -b --clean",
+    "dev:server": "npm run dev --workspace @gca-practice/server",
+    "dev:web": "npm run dev --workspace @gca-practice/web",
+    "serve:server": "npm run serve --workspace @gca-practice/server",
+    "start": "node scripts/start.mjs",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc -b --pretty false && tsc -p packages/assessment-schema/tsconfig.tests.json --pretty false && tsc -p packages/runner-core/tsconfig.tests.json --pretty false && tsc -p apps/server/tsconfig.tests.json --pretty false && tsc -p apps/web/tsconfig.tests.json --pretty false && tsc -p tsconfig.e2e.json --pretty false"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nxtrio/CodeSignalClone.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nxtrio/CodeSignalClone/issues"
+  },
+  "homepage": "https://github.com/nxtrio/CodeSignalClone#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "dompurify": "3.4.13"
+  }
+}
