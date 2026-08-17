@@ -43,4 +43,25 @@ describe("AssessmentTimer", () => {
     act(() => vi.advanceTimersByTime(5_000));
     expect(onExpire).toHaveBeenCalledTimes(1);
   });
+
+  it("stops updating while completion is in progress", () => {
+    vi.useFakeTimers();
+    let now = Date.parse("2026-08-16T12:00:00.000Z");
+    const expiresAt = "2026-08-16T12:00:10.000Z";
+    const view = render(
+      <AssessmentTimer expiresAt={expiresAt} now={() => now} />,
+    );
+
+    now += 1_000;
+    act(() => vi.advanceTimersByTime(1_000));
+    expect(screen.getByText("00:09")).toBeDefined();
+
+    view.rerender(
+      <AssessmentTimer expiresAt={expiresAt} now={() => now} paused />,
+    );
+    now += 5_000;
+    act(() => vi.advanceTimersByTime(5_000));
+
+    expect(screen.getByText("00:09")).toBeDefined();
+  });
 });

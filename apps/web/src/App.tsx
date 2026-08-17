@@ -7,7 +7,10 @@ import {
   type ResumedSessionView,
   type EnvironmentView,
 } from "./api/importClient.js";
-import { ApiBackedCodePersistence } from "./editor/codePersistence.js";
+import {
+  ApiBackedCodePersistence,
+  BrowserCodePersistence,
+} from "./editor/codePersistence.js";
 import { HomePage } from "./pages/HomePage.js";
 
 const AssessmentPage = lazy(async () => {
@@ -28,7 +31,7 @@ const SettingsPage = lazy(async () => ({ default: (await import("./pages/Setting
 const importClient = new ApiImportWorkflowClient();
 const judgeClient = new ApiJudgeClient();
 
-const demoExpirationKey = "gca-practice:demo-session:expires-at";
+const demoPersistence = new BrowserCodePersistence();
 
 function SessionAssessmentRoute() {
   const { sessionId = "" } = useParams();
@@ -122,45 +125,37 @@ function latestCodeSnapshots(code: ResumedSessionView["code"]) {
 }
 
 function DemoAssessmentRoute() {
-  const [expiresAt] = useState(loadDemoExpiration);
-  const [notice, setNotice] = useState<string>();
+  const navigate = useNavigate();
+  const [expiresAt] = useState(createDemoExpiration);
   return (
-    <>
-      <Suspense fallback={<div className="workspace-loading">Opening workspace…</div>}>
-        <AssessmentPage
-          sessionId="demo-session"
-          assessment={demoAssessment}
-          expiresAt={expiresAt}
-          onFinish={() => setNotice("Your latest drafts are saved.")}
-        />
-      </Suspense>
-      {notice && (
-        <div className="finish-notice" role="status">
-          <span>✓</span>
-          {notice}
-          <button type="button" onClick={() => setNotice(undefined)}>
-            Dismiss
-          </button>
-        </div>
-      )}
-    </>
+    <Suspense fallback={<div className="workspace-loading">Opening workspace…</div>}>
+      <AssessmentPage
+        sessionId="demo-session"
+        assessment={demoAssessment}
+        expiresAt={expiresAt}
+        persistence={demoPersistence}
+        onFinish={(code) => {
+          for (const snapshot of code) {
+            demoPersistence.save(
+              {
+                sessionId: "demo-session",
+                problemId: snapshot.problemId,
+                language: snapshot.language,
+              },
+              snapshot.source,
+            );
+          }
+          navigate("/", { replace: true });
+        }}
+      />
+    </Suspense>
   );
 }
 
-function loadDemoExpiration(): string {
-  try {
-    const stored = window.localStorage.getItem(demoExpirationKey);
-    if (stored && Date.parse(stored) > Date.now()) return stored;
-    const expiresAt = new Date(
-      Date.now() + demoAssessment.durationSeconds * 1_000,
-    ).toISOString();
-    window.localStorage.setItem(demoExpirationKey, expiresAt);
-    return expiresAt;
-  } catch {
-    return new Date(
-      Date.now() + demoAssessment.durationSeconds * 1_000,
-    ).toISOString();
-  }
+function createDemoExpiration(): string {
+  return new Date(
+    Date.now() + demoAssessment.durationSeconds * 1_000,
+  ).toISOString();
 }
 
 export function App() {

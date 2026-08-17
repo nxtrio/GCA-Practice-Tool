@@ -4,6 +4,7 @@ export interface AssessmentTimerProps {
   expiresAt: string;
   onExpire?: () => void;
   now?: () => number;
+  paused?: boolean;
 }
 
 export function remainingTimeMs(expiresAt: string, now: number): number {
@@ -23,6 +24,7 @@ export function AssessmentTimer({
   expiresAt,
   onExpire,
   now = Date.now,
+  paused = false,
 }: AssessmentTimerProps) {
   const [remainingMs, setRemainingMs] = useState(() =>
     remainingTimeMs(expiresAt, now()),
@@ -40,9 +42,10 @@ export function AssessmentTimer({
     };
 
     update();
+    if (paused) return;
     const interval = window.setInterval(update, 1_000);
     return () => window.clearInterval(interval);
-  }, [expiresAt, now, onExpire]);
+  }, [expiresAt, now, onExpire, paused]);
 
   const warning = remainingMs > 0 && remainingMs <= 60_000;
   return (

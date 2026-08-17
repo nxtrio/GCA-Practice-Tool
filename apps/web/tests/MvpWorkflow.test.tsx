@@ -18,10 +18,37 @@ vi.mock("../src/editor/monacoEnvironment.ts", () => ({ configureLocalMonaco: vi.
 
 afterEach(() => {
   cleanup();
+  window.localStorage.clear();
   vi.unstubAllGlobals();
 });
 
 describe("MVP browser workflow", () => {
+  it("closes a finished demo and starts a fresh timer on each visit", async () => {
+    window.localStorage.setItem(
+      "gca-practice:demo-session:expires-at",
+      new Date(Date.now() + 10 * 60 * 1_000).toISOString(),
+    );
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path.endsWith("/api/history")) {
+        return json({ unfinished: [], completed: [] });
+      }
+      if (path.endsWith("/api/environment")) return json(environment());
+      throw new Error(`Unexpected request: ${path}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<MemoryRouter initialEntries={["/assessment/demo"]}><App /></MemoryRouter>);
+
+    expect(await screen.findByText("1:10:00")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Finish session" }));
+    const reopen = await screen.findByRole("link", { name: "Open demo workspace" });
+    expect(screen.queryByLabelText("Time remaining")).toBeNull();
+
+    fireEvent.click(reopen);
+    expect(await screen.findByText("1:10:00")).toBeDefined();
+  });
+
   it("imports, runs, submits, preserves code, finishes, and displays results", async () => {
     const session = activeSession();
     const execution: RunResult = {

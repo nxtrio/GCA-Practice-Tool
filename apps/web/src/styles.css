@@ -185,9 +185,6 @@ button:focus-visible, a:focus-visible, select:focus-visible {
 .button--secondary { border: 1px solid var(--border-bright); color: #c9d2e0; background: #151e2b; }
 .button--primary { border: 1px solid #59d2a4; color: #07140f; background: var(--accent); }
 .button:disabled { opacity: 0.42; cursor: not-allowed; }
-.finish-notice { position: fixed; right: 1rem; bottom: 1rem; z-index: 20; display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 0.9rem; border: 1px solid #315445; border-radius: 0.65rem; color: #ceeade; background: #11231c; box-shadow: 0 15px 45px rgb(0 0 0 / 35%); font-size: 0.8rem; }
-.finish-notice > span { color: var(--accent); }
-.finish-notice button { border: 0; color: var(--muted); background: transparent; cursor: pointer; font-size: 0.7rem; }
 .workspace-loading { display: grid; place-items: center; width: 100vw; height: 100vh; color: var(--muted); background: var(--canvas); font-size: 0.82rem; }
 .workspace-error { align-content: center; gap: 0.8rem; }
 .workspace-error p { margin: 0; color: #ffb0b0; }

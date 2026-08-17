@@ -239,6 +239,7 @@ export function AssessmentPage({
             <AssessmentTimer
               expiresAt={expiresAt}
               onExpire={() => void completeAssessment()}
+              paused={finishing}
             />
             <button
               className="finish-button"
