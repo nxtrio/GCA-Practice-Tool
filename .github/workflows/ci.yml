@@ -27,7 +27,9 @@ jobs:
           java-version: "21"
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      # Native runner suites compile and execute Java/C++ programs. Running test
+      # files concurrently can starve toolchain detection on small hosted runners.
+      - run: npm test -- --no-file-parallelism
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
