@@ -74,6 +74,7 @@ export function AssessmentPage({
   const [drafts, setDrafts] = useState<Record<string, string>>(() =>
     loadDrafts(sessionId, assessment.problems, persistence),
   );
+  const [sourceRevision, setSourceRevision] = useState(0);
   const [saveState, setSaveState] = useState<"saved" | "saving">("saved");
   const [expired, setExpired] = useState(
     () => Date.parse(expiresAt) <= Date.now(),
@@ -165,6 +166,7 @@ export function AssessmentPage({
   };
   const resetSource = () => {
     updateSource(starterCode(language, activeProblem.signature));
+    setSourceRevision((current) => current + 1);
   };
   const completeAssessment = useCallback(async () => {
     if (completionStarted.current) return;
@@ -295,6 +297,7 @@ export function AssessmentPage({
           modelPath={`${sessionId}/${activeProblem.id}/solution.${fileExtension(language)}`}
           language={language}
           source={currentSource}
+          sourceRevision={sourceRevision}
           disabled={expired}
           onChange={updateSource}
         />

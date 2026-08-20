@@ -9,8 +9,8 @@ import { demoAssessment } from "../src/assessment/demoAssessment.ts";
 import type { AssessmentResultView } from "../src/api/importClient.ts";
 
 vi.mock("@monaco-editor/react", () => ({
-  default: ({ value, onChange, options }: { value: string; onChange(value: string): void; options: { ariaLabel: string; readOnly: boolean } }) => (
-    <textarea aria-label={options.ariaLabel} value={value} readOnly={options.readOnly} onChange={(event) => onChange(event.target.value)} />
+  default: ({ defaultValue, value, onChange, options }: { defaultValue?: string; value?: string; onChange(value: string): void; options: { ariaLabel: string; readOnly: boolean } }) => (
+    <textarea aria-label={options.ariaLabel} value={value ?? defaultValue} readOnly={options.readOnly} onChange={(event) => onChange(event.target.value)} />
   ),
   loader: { config: vi.fn() },
 }));

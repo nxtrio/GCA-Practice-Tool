@@ -14,17 +14,19 @@ import { AssessmentPage } from "../src/pages/AssessmentPage.tsx";
 
 vi.mock("@monaco-editor/react", () => ({
   default: ({
+    defaultValue,
     value,
     onChange,
     options,
   }: {
-    value: string;
+    defaultValue?: string;
+    value?: string;
     onChange: (value: string) => void;
     options: { ariaLabel: string; readOnly: boolean };
   }) => (
     <textarea
       aria-label={options.ariaLabel}
-      value={value}
+      value={value ?? defaultValue}
       readOnly={options.readOnly}
       onChange={(event) => onChange(event.target.value)}
     />
