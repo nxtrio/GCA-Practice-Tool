@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ASSESSMENT_PRESETS } from "@gca-practice/contracts";
+import type { AssessmentPresetId } from "@gca-practice/contracts";
 import {
   ApiImportWorkflowClient,
   type EnvironmentView,
@@ -39,6 +40,7 @@ export function HomePage({ client = defaultClient }: { client?: ImportWorkflowCl
         <div className="preset-grid" aria-label="Assessment presets">
           <PresetCard preset="gca" description="Classic progression from fundamentals through optimization." />
           <PresetCard preset="roblox" description="Implementation-heavy practice with a matrix and simulation bias." />
+          <PresetCard preset="imc" description="Unofficial HackerRank-style algorithms and data structures practice at Medium-Hard / Hard difficulty." />
         </div>
         <div className="home-actions">
           {active && <Link className="resume-button" to={`/assessment/${active.sessionId}`}>Resume {ASSESSMENT_PRESETS[active.preset].shortName}: {active.assessmentTitle} <span>{active.problemsSolved}/{active.problemCount}</span></Link>}
@@ -71,7 +73,7 @@ function PresetCard({
   preset: presetId,
   description,
 }: {
-  preset: "gca" | "roblox";
+  preset: AssessmentPresetId;
   description: string;
 }) {
   const preset = ASSESSMENT_PRESETS[presetId];

@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "1.0",
+  "assessment": {
+    "preset": "imc",
+    "title": "IMC SWE Practice Fixture",
+    "durationSeconds": 7200,
+    "problems": [
+      {
+        "id": "p1",
+        "slot": 1,
+        "title": "Peak Active Jobs",
+        "generationMetadata": {
+          "conceptSummary": "Determine peak overlap among half-open job intervals without scanning the full timeline.",
+          "skills": ["sorting", "priority queues", "intervals"],
+          "expectedComplexity": "O(n log n)",
+          "patternTags": ["interval sweep", "min heap"]
+        },
+        "description": "Two equal-length arrays describe jobs. Job i is active on the half-open interval [starts[i], starts[i] + durations[i]). Return the largest number of jobs active at the same instant. A job ending at time t is not active when another job starts at t. The input order is arbitrary.",
+        "constraints": [
+          "1 <= starts.length = durations.length <= 200000",
+          "0 <= starts[i] <= 1000000000",
+          "1 <= durations[i] <= 1000000000"
+        ],
+        "signature": {
+          "name": "solution",
+          "parameters": [
+            { "name": "starts", "type": { "kind": "array", "items": { "kind": "int" } } },
+            { "name": "durations", "type": { "kind": "array", "items": { "kind": "int" } } }
+          ],
+          "returnType": { "kind": "int" }
+        },
+        "examples": [
+          {
+            "arguments": [[1, 2, 4], [5, 2, 1]],
+            "output": 2,
+            "explanation": "At most two half-open intervals overlap; the job ending at 4 does not overlap the job starting at 4."
+          }
+        ],
+        "limits": {
+          "executionTimeMs": 2000,
+          "compileTimeMs": 10000,
+          "outputLimitBytes": 65536
+        },
+        "tests": {
+          "visible": [
+            { "id": "p1-v1", "arguments": [[1, 2, 4], [5, 2, 1]], "expected": 2, "category": "example" },
+            { "id": "p1-v2", "arguments": [[0, 0, 0], [1, 1, 1]], "expected": 3, "category": "shared-start" },
+            { "id": "p1-v3", "arguments": [[0, 5, 10], [5, 5, 5]], "expected": 1, "category": "touching" }
+          ],
+          "hidden": [
+            { "id": "p1-h1", "arguments": [[7], [3]], "expected": 1, "category": "minimum" },
+            { "id": "p1-h2", "arguments": [[8, 1, 4, 2], [1, 10, 3, 2]], "expected": 2, "category": "unsorted" },
+            { "id": "p1-h3", "arguments": [[1000000000, 999999999], [1000000000, 2]], "expected": 2, "category": "large-values" }
+          ]
+        },
+        "validation": {
+          "referenceLanguage": "python",
+          "referenceSolution": "def solution(starts, durations):\n    import heapq\n    active_ends = []\n    best = 0\n    for start, duration in sorted(zip(starts, durations)):\n        while active_ends and active_ends[0] <= start:\n            heapq.heappop(active_ends)\n        heapq.heappush(active_ends, start + duration)\n        best = max(best, len(active_ends))\n    return best"
+        }
+      },
+      {
+        "id": "p2",
+        "slot": 2,
+        "title": "Dispatch Batch Ceiling",
+        "generationMetadata": {
+          "conceptSummary": "Minimize the largest contiguous batch cost when adjacent jobs within a batch add a setup overhead.",
+          "skills": ["binary search on answer", "greedy feasibility", "partitioning"],
+          "expectedComplexity": "O(n log S)",
+          "patternTags": ["parametric search", "contiguous batching"]
+        },
+        "description": "Jobs must be dispatched in their given order using at most batches nonempty contiguous batches. A batch containing jobs i through j costs the sum of their loads plus setup for every adjacent pair inside that batch, so its cost is sum(loads[i..j]) + setup * (j - i). Return the minimum possible value of the maximum batch cost.",
+        "constraints": [
+          "1 <= loads.length <= 200000",
+          "1 <= batches <= loads.length",
+          "0 <= loads[i] <= 1000000000",
+          "0 <= setup <= 1000000000",
+          "The answer fits the supported long range"
+        ],
+        "signature": {
+          "name": "solution",
+          "parameters": [
+            { "name": "loads", "type": { "kind": "array", "items": { "kind": "int" } } },
+            { "name": "batches", "type": { "kind": "int" } },
+            { "name": "setup", "type": { "kind": "int" } }
+          ],
+          "returnType": { "kind": "long" }
+        },
+        "examples": [
+          {
+            "arguments": [[4, 2, 7, 3], 2, 1],
+            "output": 11,
+            "explanation": "Batches [4, 2] and [7, 3] cost 7 and 11, and no other split has a lower maximum."
+          }
+        ],
+        "limits": {
+          "executionTimeMs": 2500,
+          "compileTimeMs": 10000,
+          "outputLimitBytes": 65536
+        },
+        "tests": {
+          "visible": [
+            { "id": "p2-v1", "arguments": [[4, 2, 7, 3], 2, 1], "expected": 11, "category": "example" },
+            { "id": "p2-v2", "arguments": [[5], 1, 10], "expected": 5, "category": "minimum" },
+            { "id": "p2-v3", "arguments": [[1, 1, 1, 1], 2, 2], "expected": 4, "category": "setup-dominant" }
+          ],
+          "hidden": [
+            { "id": "p2-h1", "arguments": [[0, 0, 0], 1, 5], "expected": 10, "category": "zero-loads" },
+            { "id": "p2-h2", "arguments": [[9, 1, 1], 2, 0], "expected": 9, "category": "dominant-job" },
+            { "id": "p2-h3", "arguments": [[1000000000, 1000000000, 1000000000], 1, 1000000000], "expected": 5000000000, "category": "overflow" }
+          ]
+        },
+        "validation": {
+          "referenceLanguage": "python",
+          "referenceSolution": "def solution(loads, batches, setup):\n    def feasible(limit):\n        used = 1\n        current = 0\n        count = 0\n        for load in loads:\n            addition = load if count == 0 else setup + load\n            if current + addition > limit:\n                used += 1\n                current = load\n                count = 1\n                if used > batches:\n                    return False\n            else:\n                current += addition\n                count += 1\n        return True\n    low = max(loads)\n    high = sum(loads) + setup * (len(loads) - 1)\n    while low < high:\n        middle = (low + high) // 2\n        if feasible(middle):\n            high = middle\n        else:\n            low = middle + 1\n    return low"
+        }
+      }
+    ]
+  }
+}

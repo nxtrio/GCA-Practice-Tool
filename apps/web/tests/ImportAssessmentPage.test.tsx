@@ -146,6 +146,26 @@ describe("ImportAssessmentPage", () => {
     expect((screen.getByRole("button", { name: "Start Roblox Assessment" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("identifies IMC mode and uses its dedicated generation flow", () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn(async () => undefined) },
+    });
+    const client = fakeClient({ valid: false, errors: [], warnings: [] });
+    render(
+      <MemoryRouter initialEntries={["/import?preset=imc"]}>
+        <ImportAssessmentPage client={client} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "New IMC SWE Practice." })).toBeDefined();
+    expect(screen.getByText(/2 questions · 120 minutes/)).toBeDefined();
+    expect(screen.getByText(/Unofficial HackerRank-style SWE simulation/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "Copy IMC Generation Prompt" })).toBeDefined();
+    expect(client.problemHistory).toHaveBeenCalledWith("imc");
+    expect(screen.getByText(/"preset": "imc"/)).toBeDefined();
+  });
+
   it("warns that imported reference code executes locally", () => {
     render(<MemoryRouter><ImportAssessmentPage client={fakeClient({ valid: false, errors: [], warnings: [] })} /></MemoryRouter>);
 

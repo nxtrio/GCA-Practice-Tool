@@ -23,6 +23,10 @@ const robloxFixture = JSON.parse(readFileSync(
   new URL("../../../fixtures/assessments/valid-roblox.json", import.meta.url),
   "utf8",
 )) as Assessment;
+const imcFixture = JSON.parse(readFileSync(
+  new URL("../../../fixtures/assessments/valid-imc.json", import.meta.url),
+  "utf8",
+)) as Assessment;
 
 describe("Phase 10 completion and history", () => {
   let directory: string;
@@ -164,6 +168,31 @@ describe("Phase 10 completion and history", () => {
       assessment: { preset: "roblox", summary: { problemCount: 2 } },
       analysisRequest: {
         objective: expect.stringContaining("Roblox Coding Assessment"),
+      },
+    });
+  });
+
+  it("labels IMC results, history, and readiness exports with their preset", async () => {
+    const assessment = assessments.save(imcFixture);
+    const session = sessionService.startSession(assessment.id);
+    nowMs += 5 * 60 * 1_000;
+
+    const result = await completionService.complete(session.id);
+
+    expect(result).toMatchObject({
+      assessmentTitle: "IMC SWE Practice Fixture",
+      preset: "imc",
+      problemCount: 2,
+    });
+    expect(resultsService.history().completed[0]).toMatchObject({
+      preset: "imc",
+      problemCount: 2,
+    });
+    expect(resultsService.analysisExport(session.id)).toMatchObject({
+      kind: "imc_practice_readiness_analysis",
+      assessment: { preset: "imc", summary: { problemCount: 2 } },
+      analysisRequest: {
+        objective: expect.stringContaining("IMC Software Engineering Assessment"),
       },
     });
   });

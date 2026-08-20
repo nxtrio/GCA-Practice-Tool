@@ -20,6 +20,10 @@ const validRobloxFixtureSource = readFileSync(
   new URL("../../../fixtures/assessments/valid-roblox.json", import.meta.url),
   "utf8",
 );
+const validImcFixtureSource = readFileSync(
+  new URL("../../../fixtures/assessments/valid-imc.json", import.meta.url),
+  "utf8",
+);
 
 function fixture(): Assessment {
   return JSON.parse(validFixtureSource) as Assessment;
@@ -69,6 +73,75 @@ describe("validateAssessment", () => {
       });
       expect(result.assessment.assessment.problems).toHaveLength(2);
     }
+  });
+
+  it("accepts a two-problem 120-minute IMC assessment", () => {
+    const result = validateAssessment(validImcFixtureSource);
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.assessment.assessment).toMatchObject({
+        preset: "imc",
+        durationSeconds: 7_200,
+      });
+      expect(result.assessment.assessment.problems).toHaveLength(2);
+    }
+  });
+
+  it.each([1, 3])("rejects IMC assessments with %i problem(s)", (count) => {
+    const document = JSON.parse(validImcFixtureSource) as Assessment;
+    if (count === 1) {
+      document.assessment.problems.pop();
+    } else {
+      const p3 = structuredClone(document.assessment.problems[0]!);
+      Object.assign(p3, { id: "p3", slot: 3 });
+      document.assessment.problems.push(p3);
+    }
+
+    expect(errorsOf(validateDocument(document))).toContainEqual(
+      expect.objectContaining({
+        stage: "semantic",
+        code: "problem_count",
+        path: "/assessment/problems",
+        message: `IMC Software Engineering Assessment requires exactly 2 problems; received ${count}.`,
+      }),
+    );
+  });
+
+  it.each([3_000, 4_200])("rejects IMC duration %i", (durationSeconds) => {
+    const document = JSON.parse(validImcFixtureSource) as Assessment;
+    document.assessment.durationSeconds = durationSeconds;
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "invalid_duration",
+      path: "/assessment/durationSeconds",
+      message: "IMC Software Engineering Assessment must last exactly 7200 seconds (120 minutes).",
+    });
+  });
+
+  it("rejects IMC assessments unless their slots are exactly 1 and 2", () => {
+    const document = JSON.parse(validImcFixtureSource) as Assessment;
+    document.assessment.problems[1]!.slot = 3;
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "invalid_slots",
+      path: "/assessment/problems",
+      message: "IMC Software Engineering Assessment requires problem slots 1 and 2.",
+    });
+  });
+
+  it("rejects unsupported preset identifiers at the schema boundary", () => {
+    const document = JSON.parse(validImcFixtureSource) as Assessment;
+    (document.assessment as { preset?: string }).preset = "unsupported";
+
+    expect(errorsOf(validateDocument(document))).toContainEqual(
+      expect.objectContaining({
+        stage: "schema",
+        path: "/assessment/preset",
+      }),
+    );
   });
 
   it("rejects Roblox assessments with the wrong problem count", () => {

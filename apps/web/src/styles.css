@@ -103,6 +103,7 @@ button:focus-visible, a:focus-visible, select:focus-visible {
 .assessment-brand small { display: block; max-width: 15rem; margin-top: 0.08rem; overflow: hidden; color: var(--faint); font-size: 0.7rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .problem-navigation { display: flex; justify-content: center; align-items: center; gap: 0.35rem; padding: 0.35rem; border: 1px solid #222e40; border-radius: 0.75rem; background: #0a1018; }
 .problem-tab { display: flex; align-items: center; gap: 0.42rem; min-width: 3.6rem; padding: 0.55rem 0.7rem; border: 0; border-radius: 0.55rem; color: var(--muted); background: transparent; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: background 140ms, color 140ms; }
+.problem-tab small { color: var(--faint); font-size: 0.58rem; font-weight: 600; text-transform: uppercase; }
 .problem-tab:hover { color: var(--text); background: #141d2a; }
 .problem-tab[data-active="true"] { color: #e8fff6; background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgb(85 216 166 / 22%); }
 .progress-mark { color: var(--faint); font-size: 0.86rem; }
@@ -173,6 +174,12 @@ button:focus-visible, a:focus-visible, select:focus-visible {
 .test-case dd { margin: 0; }
 .hidden-test-note { margin: 0.7rem 0 0; color: var(--faint); font-size: 0.7rem; }
 .hidden-result-detail { margin: 0.65rem 0 0; color: var(--faint); font-size: 0.7rem; }
+.custom-test-panel { margin-top: 0.9rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.55rem; background: #0a1018; }
+.custom-test-panel summary { color: #cbd5e3; cursor: pointer; font-size: 0.76rem; font-weight: 700; }
+.custom-test-panel > p { color: var(--faint); font-size: 0.7rem; }
+.custom-test-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem; }
+.custom-test-fields label { display: grid; gap: 0.35rem; color: var(--muted); font-size: 0.68rem; }
+.custom-test-fields textarea { min-height: 4.5rem; padding: 0.55rem; resize: vertical; border: 1px solid var(--border-bright); border-radius: 0.4rem; color: #cdd7e5; background: #070b11; font: 0.68rem/1.45 "JetBrains Mono", monospace; }
 .execution-message { margin: 0.7rem 0 0; padding: 0.55rem 0.65rem; border-radius: 0.4rem; color: #f3bd9c; background: rgb(255 155 92 / 8%); font-size: 0.7rem; line-height: 1.45; }
 .execution-error { margin-top: 0.75rem; padding: 0.65rem 0.75rem; border: 1px solid rgb(255 120 120 / 25%); border-radius: 0.5rem; color: #ffb0b0; background: rgb(255 112 112 / 7%); font-size: 0.75rem; }
 .debug-output { margin-top: 0.65rem; border-top: 1px solid #202b3c; color: var(--muted); font-size: 0.7rem; }
@@ -200,6 +207,7 @@ button:focus-visible, a:focus-visible, select:focus-visible {
 .import-intro .home-eyebrow { margin: 0 0 1rem; }
 .import-intro h1 { max-width: 12ch; margin: 0; color: #f3f6fb; font-size: clamp(2.8rem, 5vw, 5.4rem); font-weight: 600; letter-spacing: -0.06em; line-height: 0.98; }
 .import-intro > p:not(.home-eyebrow) { max-width: 39rem; margin: 1.6rem 0 0; color: var(--muted); font-size: 0.96rem; line-height: 1.75; }
+.import-intro .preset-disclaimer { margin-top: 0.85rem; color: #91a7c3; font-size: 0.78rem; }
 .workflow-line { display: flex; align-items: center; gap: 0.48rem; margin: 2.2rem 0; color: var(--faint); font-size: 0.68rem; }
 .workflow-line span { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1px solid var(--border-bright); border-radius: 50%; font-size: 0.62rem; }
 .workflow-line .workflow-active { border-color: var(--accent-strong); color: #07140f; background: var(--accent); }
@@ -268,11 +276,13 @@ button:focus-visible, a:focus-visible, select:focus-visible {
 .dashboard-hero .home-eyebrow { margin: 0 0 1rem; }
 .dashboard-hero h1 { max-width: 14ch; margin: 0; color: #f3f6fb; font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 600; letter-spacing: -0.065em; line-height: 0.94; }
 .dashboard-hero > p:not(.home-eyebrow) { max-width: 42rem; margin: 1.7rem 0 0; color: var(--muted); line-height: 1.7; }
-.preset-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; max-width: 54rem; margin-top: 2.2rem; }
+.preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; max-width: 82rem; margin-top: 2.2rem; }
 .preset-card { display: flex; min-height: 15rem; flex-direction: column; align-items: flex-start; padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.85rem; background: rgb(14 20 30 / 88%); }
 .preset-card[data-preset="roblox"] { border-color: rgb(181 164 255 / 35%); background: linear-gradient(145deg, rgb(181 164 255 / 8%), rgb(14 20 30 / 88%) 55%); }
+.preset-card[data-preset="imc"] { border-color: rgb(91 171 255 / 38%); background: linear-gradient(145deg, rgb(70 145 255 / 9%), rgb(14 20 30 / 88%) 55%); }
 .preset-card > span { color: var(--accent); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
 .preset-card[data-preset="roblox"] > span { color: var(--purple); }
+.preset-card[data-preset="imc"] > span { color: #77b8ff; }
 .preset-card h2 { margin: 0.65rem 0 0; color: #e2e8f1; font-size: 1.05rem; }
 .preset-card p { margin: 0.45rem 0 0; color: #b9c4d3; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
 .preset-card small { margin: 0.8rem 0 1.1rem; color: var(--faint); font-size: 0.72rem; line-height: 1.5; }

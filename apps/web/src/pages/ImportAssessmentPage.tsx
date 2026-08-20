@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ASSESSMENT_PRESETS,
+  isAssessmentPresetId,
   type AssessmentPresetId,
 } from "@gca-practice/contracts";
 import {
@@ -29,8 +30,9 @@ export function ImportAssessmentPage({
 }: ImportAssessmentPageProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const presetId: AssessmentPresetId = searchParams.get("preset") === "roblox"
-    ? "roblox"
+  const requestedPreset = searchParams.get("preset");
+  const presetId: AssessmentPresetId = isAssessmentPresetId(requestedPreset)
+    ? requestedPreset
     : "gca";
   const preset = ASSESSMENT_PRESETS[presetId];
   const [source, setSource] = useState("");
@@ -149,6 +151,11 @@ export function ImportAssessmentPage({
             paste its JSON response here. The local validator checks structure and runs
             every Python reference answer before anything is saved.
           </p>
+          {preset.id === "imc" && (
+            <p className="preset-disclaimer">
+              Unofficial HackerRank-style SWE simulation. This format is based on broad public reports and is not affiliated with or guaranteed by IMC or HackerRank.
+            </p>
+          )}
           <div className="workflow-line" aria-label="Import workflow">
             <span className="workflow-active">1</span><b>Copy prompt</b><i />
             <span>2</span><b>Add JSON</b><i />

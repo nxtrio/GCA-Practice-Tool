@@ -80,4 +80,36 @@ describe("ApiJudgeClient", () => {
       }),
     );
   });
+
+  it("includes function arguments and expected output for custom execution", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify(accepted), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await new ApiJudgeClient().execute({
+      sessionId: "s1",
+      problemId: "p1",
+      language: "python",
+      source: "def solution(values): return sum(values)",
+      mode: "custom",
+      customTest: { arguments: [[1, 2, 3]], expected: 6 },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/execution/custom",
+      expect.objectContaining({
+        body: JSON.stringify({
+          sessionId: "s1",
+          problemId: "p1",
+          language: "python",
+          source: "def solution(values): return sum(values)",
+          customTest: { arguments: [[1, 2, 3]], expected: 6 },
+        }),
+      }),
+    );
+  });
 });

@@ -11,6 +11,7 @@ export interface ProblemNavigationProps {
   items: ProblemNavigationItem[];
   activeProblemId: string;
   onSelect: (problemId: string) => void;
+  showStatusLabels?: boolean;
 }
 
 const progressSymbols: Record<ProblemProgress, string> = {
@@ -20,10 +21,18 @@ const progressSymbols: Record<ProblemProgress, string> = {
   solved: "✓",
 };
 
+const progressLabels: Record<ProblemProgress, string> = {
+  untouched: "Not Attempted",
+  written: "Attempted",
+  partial: "Submitted",
+  solved: "Submitted",
+};
+
 export function ProblemNavigation({
   items,
   activeProblemId,
   onSelect,
+  showStatusLabels = false,
 }: ProblemNavigationProps) {
   return (
     <nav className="problem-navigation" aria-label="Assessment problems">
@@ -34,13 +43,16 @@ export function ProblemNavigation({
           key={item.id}
           type="button"
           aria-current={item.id === activeProblemId ? "page" : undefined}
-          aria-label={`Question ${item.slot}: ${item.title}, ${item.progress}`}
+          aria-label={`Question ${item.slot}: ${item.title}, ${
+            showStatusLabels ? progressLabels[item.progress] : item.progress
+          }`}
           onClick={() => onSelect(item.id)}
         >
           <span className={`progress-mark progress-mark--${item.progress}`}>
             {progressSymbols[item.progress]}
           </span>
-          <span>Q{item.slot}</span>
+          <span>{showStatusLabels ? `Question ${item.slot}` : `Q${item.slot}`}</span>
+          {showStatusLabels && <small>{progressLabels[item.progress]}</small>}
         </button>
       ))}
     </nav>

@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Language, RunResult } from "@gca-practice/contracts";
+import type {
+  CustomTestInput,
+  Language,
+  RunResult,
+  RunRequest,
+} from "@gca-practice/contracts";
 import { ASSESSMENT_PRESETS } from "@gca-practice/contracts";
 import type { JudgeClient } from "../api/client.js";
-import type { CompletionCodeSnapshot } from "../api/importClient.js";
+import type {
+  CompletionCodeSnapshot,
+  ResumedSubmissionView,
+} from "../api/importClient.js";
 import { AssessmentShell } from "../assessment/AssessmentShell.js";
 import { AssessmentTimer } from "../assessment/AssessmentTimer.js";
 import { LanguageSelector, supportedLanguages } from "../assessment/LanguageSelector.js";
@@ -35,11 +43,12 @@ export interface AssessmentPageProps {
   judgeClient?: JudgeClient;
   availableLanguages?: Language[];
   initialProblemLanguages?: Partial<Record<string, Language>>;
+  initialSubmissions?: ResumedSubmissionView[];
 }
 
 interface ExecutionState {
   status: "running" | "complete" | "error";
-  mode: "run" | "submit";
+  mode: RunRequest["mode"];
   result?: RunResult;
   error?: string;
 }
@@ -53,6 +62,7 @@ export function AssessmentPage({
   judgeClient,
   availableLanguages = supportedLanguages,
   initialProblemLanguages = {},
+  initialSubmissions = [],
 }: AssessmentPageProps) {
   const preset = ASSESSMENT_PRESETS[assessment.preset];
   const [activeProblemId, setActiveProblemId] = useState(
@@ -83,7 +93,7 @@ export function AssessmentPage({
   const [completionError, setCompletionError] = useState<string>();
   const completionStarted = useRef(false);
   const [executions, setExecutions] = useState<Record<string, ExecutionState>>(
-    {},
+    () => restoredExecutions(initialSubmissions),
   );
 
   const activeProblem =
@@ -194,7 +204,10 @@ export function AssessmentPage({
       if (Date.parse(expiresAt) > Date.now()) setExpired(false);
     }
   }, [assessment.problems, drafts, expiresAt, language, onFinish, persistCurrent, preferredLanguages]);
-  const execute = async (mode: "run" | "submit") => {
+  const execute = async (
+    mode: RunRequest["mode"],
+    customTest?: CustomTestInput,
+  ) => {
     if (!judgeClient || problemRunning) return;
     persistCurrent();
     const executionKey = currentKey;
@@ -203,13 +216,20 @@ export function AssessmentPage({
       [executionKey]: { status: "running", mode },
     }));
     try {
-      const result = await judgeClient.execute({
+      const baseRequest = {
         sessionId,
         problemId: activeProblem.id,
         language,
         source: currentSource,
-        mode,
-      });
+      };
+      let request: RunRequest;
+      if (mode === "custom") {
+        if (!customTest) throw new Error("Custom input is required.");
+        request = { ...baseRequest, mode, customTest };
+      } else {
+        request = { ...baseRequest, mode };
+      }
+      const result = await judgeClient.execute(request);
       setExecutions((current) => ({
         ...current,
         [executionKey]: { status: "complete", mode, result },
@@ -255,7 +275,9 @@ export function AssessmentPage({
                 ? "Finishing…"
                 : completionError
                   ? "Retry finish"
-                  : "Finish session"}
+                  : preset.id === "imc"
+                    ? "Finish Test"
+                    : "Finish session"}
             </button>
           </div>
         </>
@@ -265,6 +287,7 @@ export function AssessmentPage({
           items={navigationItems}
           activeProblemId={activeProblem.id}
           onSelect={switchProblem}
+          showStatusLabels={preset.id === "imc"}
         />
       }
       description={<ProblemDescription problem={activeProblem} />}
@@ -312,6 +335,8 @@ export function AssessmentPage({
           {...(currentExecution?.error
             ? { error: currentExecution.error }
             : {})}
+          customTesting={preset.id === "imc"}
+          onRunCustom={(customTest) => void execute("custom", customTest)}
         />
       }
       controls={
@@ -323,11 +348,26 @@ export function AssessmentPage({
             running={problemRunning}
             onRun={() => void execute("run")}
             onSubmit={() => void execute("submit")}
+            hackerRankTerminology={preset.id === "imc"}
           />
         </>
       }
     />
   );
+}
+
+function restoredExecutions(
+  submissions: ResumedSubmissionView[],
+): Record<string, ExecutionState> {
+  const restored: Record<string, ExecutionState> = {};
+  for (const submission of submissions) {
+    restored[draftKey(submission.problemId, submission.language)] = {
+      status: "complete",
+      mode: "submit",
+      result: submission.result,
+    };
+  }
+  return restored;
 }
 
 function loadDrafts(

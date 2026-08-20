@@ -100,7 +100,10 @@ export interface ReadinessAnalysisProblem {
 
 export interface ReadinessAnalysisExport {
   schemaVersion: "1.0";
-  kind: "gca_practice_readiness_analysis" | "roblox_practice_readiness_analysis";
+  kind:
+    | "gca_practice_readiness_analysis"
+    | "roblox_practice_readiness_analysis"
+    | "imc_practice_readiness_analysis";
   generatedAt: string;
   privacy: {
     hiddenTestDetailsIncluded: false;
@@ -237,9 +240,7 @@ export class ResultsService {
 
     return {
       schemaVersion: "1.0",
-      kind: summary.preset === "roblox"
-        ? "roblox_practice_readiness_analysis"
-        : "gca_practice_readiness_analysis",
+      kind: readinessExportKind(summary.preset),
       generatedAt: this.now().toISOString(),
       privacy: {
         hiddenTestDetailsIncluded: false,
@@ -399,4 +400,17 @@ function latestSubmissions(submissions: Submission[]): Map<string, Submission> {
 function completionTime(session: Session, now: number): number {
   if (session.finishedAt) return Date.parse(session.finishedAt);
   return Math.min(now, Date.parse(session.expiresAt ?? new Date(now).toISOString()));
+}
+
+function readinessExportKind(
+  preset: AssessmentPresetId,
+): ReadinessAnalysisExport["kind"] {
+  switch (preset) {
+    case "gca":
+      return "gca_practice_readiness_analysis";
+    case "roblox":
+      return "roblox_practice_readiness_analysis";
+    case "imc":
+      return "imc_practice_readiness_analysis";
+  }
 }

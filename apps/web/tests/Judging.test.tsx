@@ -11,6 +11,7 @@ import type { JudgeClient } from "../src/api/client.ts";
 import { demoAssessment } from "../src/assessment/demoAssessment.ts";
 import { MemoryCodePersistence } from "../src/editor/codePersistence.ts";
 import { AssessmentPage } from "../src/pages/AssessmentPage.tsx";
+import type { AssessmentView } from "../src/assessment/types.ts";
 
 vi.mock("@monaco-editor/react", () => ({
   default: ({
@@ -164,7 +165,99 @@ describe("AssessmentPage judging", () => {
     expect(screen.getByText(`${label} details`)).toBeDefined();
     expect(screen.getByText(`${label} stderr`)).toBeDefined();
   });
+
+  it("uses IMC test terminology, status labels, custom input, and resubmission", async () => {
+    const execute = vi.fn(async (request: RunRequest): Promise<RunResult> => ({
+      verdict: "accepted",
+      passed: 1,
+      total: 1,
+      tests: [{
+        visibility: "visible",
+        testId: request.mode === "custom" ? "__custom__" : "p1-v1",
+        verdict: "accepted",
+        executionTimeMs: 2,
+        expected: request.mode === "custom" ? request.customTest.expected : 6,
+        actual: request.mode === "custom" ? request.customTest.expected : 6,
+      }],
+    }));
+    render(
+      <AssessmentPage
+        sessionId="session-imc"
+        assessment={imcAssessment}
+        expiresAt={expiresAt}
+        persistence={new MemoryCodePersistence()}
+        judgeClient={{ execute }}
+      />,
+    );
+
+    expect(screen.getByText("IMC SWE Practice")).toBeDefined();
+    expect(screen.getAllByText("Not Attempted")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Run Code" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Submit Code" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Finish Test" })).toBeDefined();
+
+    fireEvent.change(screen.getByLabelText("java code editor"), {
+      target: { value: "candidate source" },
+    });
+    expect(screen.getByText("Attempted")).toBeDefined();
+    fireEvent.click(screen.getByText("Custom Input"));
+    fireEvent.change(screen.getByLabelText("Arguments JSON"), {
+      target: { value: "[[1,2,3]]" },
+    });
+    fireEvent.change(screen.getByLabelText("Expected JSON"), {
+      target: { value: "6" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Test against custom input" }));
+
+    expect(await screen.findByText("Custom test")).toBeDefined();
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({
+      mode: "custom",
+      customTest: { arguments: [[1, 2, 3]], expected: 6 },
+    }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit Code" }));
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("Submitted")).toBeDefined();
+    fireEvent.change(screen.getByLabelText("java code editor"), {
+      target: { value: "edited after submit" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Submit Code" }));
+    await waitFor(() => expect(execute).toHaveBeenCalledTimes(3));
+  });
+
+  it("restores persisted IMC submission status after reload", () => {
+    render(
+      <AssessmentPage
+        sessionId="session-imc-resume"
+        assessment={imcAssessment}
+        expiresAt={expiresAt}
+        persistence={new MemoryCodePersistence()}
+        initialSubmissions={[{
+          problemId: "p1",
+          language: "python",
+          submittedAt: "2026-08-16T12:10:00.000Z",
+          result: {
+            verdict: "wrong_answer",
+            passed: 1,
+            total: 2,
+            tests: [],
+          },
+        }]}
+      />,
+    );
+
+    expect(screen.getByText("Submitted")).toBeDefined();
+  });
 });
+
+const imcAssessment: AssessmentView = {
+  ...demoAssessment,
+  id: "imc-fixture",
+  preset: "imc",
+  title: "IMC SWE Practice Fixture",
+  durationSeconds: 7_200,
+  problems: demoAssessment.problems.slice(0, 2),
+};
 
 function renderPage(judgeClient: JudgeClient) {
   return render(

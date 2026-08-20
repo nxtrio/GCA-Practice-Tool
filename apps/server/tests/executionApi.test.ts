@@ -54,6 +54,51 @@ describe("execution API", () => {
     },
   );
 
+  it("maps custom input execution without persisting hidden testcase data", async () => {
+    const execute = vi.fn(async (_request: RunRequest) => accepted);
+    const running = await listen(createApp({ executionService: { execute } }));
+    server = running.server;
+
+    const response = await fetch(`${running.origin}/api/execution/custom`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        sessionId: "session-1",
+        problemId: "p1",
+        language: "python",
+        source: "def solution(value): return value",
+        customTest: { arguments: [7], expected: 7 },
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({
+      mode: "custom",
+      customTest: { arguments: [7], expected: 7 },
+    }));
+  });
+
+  it("rejects malformed custom input before invoking the judge", async () => {
+    const execute = vi.fn(async (_request: RunRequest) => accepted);
+    const running = await listen(createApp({ executionService: { execute } }));
+    server = running.server;
+
+    const response = await fetch(`${running.origin}/api/execution/custom`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        sessionId: "session-1",
+        problemId: "p1",
+        language: "python",
+        source: "pass",
+        customTest: { arguments: null, expected: 1 },
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
   it("returns actionable toolchain diagnostics", async () => {
     const toolchains = {
       java: { available: false as const, javaPath: null, javacPath: null, version: null, installationHint: "Install a JDK." },

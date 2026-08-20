@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import {
+  isAssessmentPresetId,
   resolveAssessmentPreset,
   type AssessmentPresetId,
 } from "@gca-practice/contracts";
@@ -86,7 +87,7 @@ export function registerAssessmentRoutes(
 }
 
 function requestedPreset(value: unknown): AssessmentPresetId | undefined {
-  return value === "gca" || value === "roblox" ? value : undefined;
+  return isAssessmentPresetId(value) ? value : undefined;
 }
 
 function property(body: unknown, name: string): unknown {

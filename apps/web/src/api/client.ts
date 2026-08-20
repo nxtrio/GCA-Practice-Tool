@@ -28,6 +28,9 @@ export class ApiJudgeClient implements JudgeClient {
           problemId: request.problemId,
           language: request.language,
           source: request.source,
+          ...(request.mode === "custom"
+            ? { customTest: request.customTest }
+            : {}),
         }),
       },
     );

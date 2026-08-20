@@ -1,4 +1,9 @@
-import type { AssessmentPresetId, Language, Session } from "@gca-practice/contracts";
+import type {
+  AssessmentPresetId,
+  Language,
+  RunResult,
+  Session,
+} from "@gca-practice/contracts";
 import type { AssessmentView } from "../assessment/types.js";
 import type { ProblemHistoryEntry } from "../generation/AvoidanceManifestBuilder.js";
 
@@ -33,7 +38,15 @@ export interface ResumedSessionView {
   session: Session;
   assessment: AssessmentView;
   code: SessionCodeView[];
+  submissions?: ResumedSubmissionView[];
   remainingMs: number;
+}
+
+export interface ResumedSubmissionView {
+  problemId: string;
+  language: Language;
+  submittedAt: string;
+  result: RunResult;
 }
 
 export interface ToolchainView {

@@ -20,11 +20,13 @@ export type {
 export {
   ASSESSMENT_PRESETS,
   AssessmentPresetResolutionError,
+  isAssessmentPresetId,
   resolveAssessmentPreset,
   type AssessmentPreset,
   type AssessmentPresetId,
 } from "./assessmentPresets.js";
 export type {
+  CustomTestInput,
   ExecutionVerdict,
   HiddenTestResult,
   RunRequest,

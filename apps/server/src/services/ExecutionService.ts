@@ -1,9 +1,13 @@
 import type {
+  CustomTestInput,
   Language,
   RunRequest,
   RunResult,
 } from "@gca-practice/contracts";
-import type { ExecutionCoordinator } from "@gca-practice/runner-core";
+import {
+  assertValueMatchesType,
+  type ExecutionCoordinator,
+} from "@gca-practice/runner-core";
 import { AssessmentRepository } from "../persistence/repositories/AssessmentRepository.js";
 import { SessionRepository } from "../persistence/repositories/SessionRepository.js";
 import {
@@ -24,6 +28,13 @@ export class ExecutionConflictError extends Error {
         `problem "${problemId}".`,
     );
     this.name = "ExecutionConflictError";
+  }
+}
+
+export class CustomTestValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CustomTestValidationError";
   }
 }
 
@@ -80,14 +91,17 @@ export class ExecutionService {
         throw new PersistenceNotFoundError("problem", request.problemId);
       }
 
+      const customTest = request.mode === "custom"
+        ? materializeCustomTest(request.customTest, problem.signature)
+        : undefined;
       const result = await this.coordinator.execute({
         language: request.language,
         source: request.source,
         signature: problem.signature,
         limits: problem.limits,
-        visibleTests: problem.tests.visible,
-        hiddenTests: problem.tests.hidden,
-        mode: request.mode,
+        visibleTests: customTest ? [customTest] : problem.tests.visible,
+        hiddenTests: customTest ? [] : problem.tests.hidden,
+        mode: request.mode === "custom" ? "run" : request.mode,
       });
       if (request.mode === "submit") {
         const submit = completion
@@ -112,6 +126,33 @@ export class ExecutionService {
   ): boolean {
     return this.activeJobs.has(`${sessionId}\0${problemId}`);
   }
+}
+
+function materializeCustomTest(
+  input: CustomTestInput,
+  signature: Parameters<ExecutionCoordinator["execute"]>[0]["signature"],
+) {
+  if (input.arguments.length !== signature.parameters.length) {
+    throw new CustomTestValidationError(
+      `Custom test has ${input.arguments.length} arguments but solution() accepts ${signature.parameters.length}.`,
+    );
+  }
+  try {
+    signature.parameters.forEach((parameter, index) => {
+      assertValueMatchesType(input.arguments[index]!, parameter.type, `arguments[${index}]`);
+    });
+    assertValueMatchesType(input.expected, signature.returnType, "expected");
+  } catch (error) {
+    throw new CustomTestValidationError(
+      error instanceof Error ? error.message : "Custom test values do not match the function signature.",
+    );
+  }
+  return {
+    id: "__custom__",
+    arguments: structuredClone(input.arguments),
+    expected: structuredClone(input.expected),
+    category: "custom",
+  };
 }
 
 export function isSupportedLanguage(value: unknown): value is Language {

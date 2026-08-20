@@ -60,6 +60,37 @@ describe("Phase 9 prompt builders", () => {
     expect(prompt).not.toContain("70-minute assessment");
   });
 
+  it("builds a dedicated IMC SWE prompt without GCA or Roblox constraints", () => {
+    const prompt = new GenerationPromptBuilder("imc").build([]);
+
+    expect(prompt).toContain('"preset": "imc"');
+    expect(prompt).toContain('"durationSeconds": 7200');
+    expect(prompt).toContain("exactly two single-function problems");
+    expect(prompt).toContain("slots exactly 1 and 2");
+    expect(prompt).toContain("120-minute");
+    expect(prompt).toContain("Q2: 50–60 minutes");
+    expect(prompt).toContain("90–110 minutes");
+    expect(prompt).toContain("upper Medium to Medium-Hard");
+    expect(prompt).toContain("Medium-Hard to Hard");
+    expect(prompt).toContain("one central algorithmic insight");
+    expect(prompt).toContain("12–18 hidden tests");
+    expect(prompt).toContain("literal-JSON test format");
+    expect(prompt).toContain("PRIVATE SOLUTION SANITY CHECK");
+    expect(prompt).toContain("NOT considered original merely");
+    expect(prompt).toContain("binary search on answer");
+    expect(prompt).toContain("BFS");
+    expect(prompt).toContain("dynamic programming");
+    expect(prompt).toContain("ORIGINALITY REQUIREMENT");
+    expect(prompt).toContain("reported or leaked IMC assessment problem");
+    expect(prompt).toContain("proprietary HackerRank question");
+    expect(prompt).not.toContain("exactly four single-function problems");
+    expect(prompt).not.toContain('"durationSeconds": 4200');
+    expect(prompt).not.toContain('"preset": "roblox"');
+    expect(prompt).not.toContain("matrix and simulation bias");
+    expect(prompt).not.toContain("{{HISTORY_MANIFEST}}");
+    expect(prompt).not.toContain("Controlled Calibration");
+  });
+
   it("builds a useful empty avoidance manifest", () => {
     expect(new AvoidanceManifestBuilder().build([])).toContain(
       "No prior imported problems",

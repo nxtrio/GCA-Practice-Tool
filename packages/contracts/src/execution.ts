@@ -11,13 +11,21 @@ export type ExecutionVerdict =
 
 export type TestVisibility = "visible" | "hidden";
 
-export interface RunRequest {
+interface BaseRunRequest {
   sessionId: string;
   problemId: string;
   language: Language;
   source: string;
-  mode: "run" | "submit";
 }
+
+export interface CustomTestInput {
+  arguments: SupportedValue[];
+  expected: SupportedValue;
+}
+
+export type RunRequest =
+  | (BaseRunRequest & { mode: "run" | "submit" })
+  | (BaseRunRequest & { mode: "custom"; customTest: CustomTestInput });
 
 interface BaseTestResult {
   verdict: ExecutionVerdict;

@@ -6,6 +6,7 @@ import type { CompletionService } from "../services/CompletionService.js";
 import type { ResultsService } from "../services/ResultsService.js";
 import type { CompletionCodeSnapshot } from "../services/CompletionService.js";
 import { DEFAULT_MAX_SOURCE_BYTES } from "@gca-practice/runner-core";
+import { redactRunResultForApi } from "./execution.js";
 
 export interface SessionRouteDependencies {
   sessionService?: SessionService;
@@ -40,6 +41,12 @@ export function registerSessionRoutes(
       session: resumed.session,
       assessment: persistedAssessmentToView(resumed.assessment),
       code: resumed.code,
+      submissions: resumed.submissions.map((submission) => ({
+        problemId: submission.problemId,
+        language: submission.language,
+        submittedAt: submission.submittedAt,
+        result: redactRunResultForApi(submission.result),
+      })),
       remainingMs: resumed.remainingMs,
     });
   });

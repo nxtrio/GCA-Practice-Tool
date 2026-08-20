@@ -5,6 +5,7 @@ import {
 } from "@gca-practice/runner-core";
 import express, { type NextFunction, type Request, type Response } from "express";
 import {
+  CustomTestValidationError,
   ExecutionConflictError,
   isSupportedLanguage,
 } from "./services/ExecutionService.js";
@@ -58,13 +59,13 @@ export function createApp(dependencies: AppDependencies = {}) {
   registerSessionRoutes(app, dependencies);
   registerEnvironmentRoute(app, dependencies);
 
-  for (const mode of ["run", "submit"] as const) {
+  for (const mode of ["run", "submit", "custom"] as const) {
     app.post(`/api/execution/${mode}`, async (request, response) => {
       if (!dependencies.executionService) {
         response.status(503).json({ error: "Execution service is unavailable." });
         return;
       }
-      const validationError = validateExecutionBody(request.body);
+      const validationError = validateExecutionBody(request.body, mode);
       if (validationError) {
         response.status(400).json({ error: validationError });
         return;
@@ -95,7 +96,10 @@ export function createApp(dependencies: AppDependencies = {}) {
 
 export const app = createApp();
 
-function validateExecutionBody(body: unknown): string | undefined {
+function validateExecutionBody(
+  body: unknown,
+  mode: RunRequest["mode"],
+): string | undefined {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return "Request body must be a JSON object.";
   }
@@ -115,7 +119,26 @@ function validateExecutionBody(body: unknown): string | undefined {
   if (Buffer.byteLength(value.source, "utf8") > DEFAULT_MAX_SOURCE_BYTES) {
     return `source exceeds the ${DEFAULT_MAX_SOURCE_BYTES}-byte limit.`;
   }
+  if (mode === "custom") {
+    if (!isCustomTestInput(value.customTest)) {
+      return "customTest must contain a JSON-compatible arguments array and expected value.";
+    }
+  }
   return undefined;
+}
+
+function isCustomTestInput(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const input = value as Record<string, unknown>;
+  return Array.isArray(input.arguments) &&
+    input.arguments.every(isSupportedJsonValue) &&
+    isSupportedJsonValue(input.expected);
+}
+
+function isSupportedJsonValue(value: unknown): boolean {
+  return typeof value === "string" || typeof value === "boolean" ||
+    (typeof value === "number" && Number.isSafeInteger(value)) ||
+    (Array.isArray(value) && value.every(isSupportedJsonValue));
 }
 
 function mapError(error: unknown): { status: number; message: string } {
@@ -127,6 +150,9 @@ function mapError(error: unknown): { status: number; message: string } {
   }
   if (error instanceof PersistenceNotFoundError) {
     return { status: 404, message: error.message };
+  }
+  if (error instanceof CustomTestValidationError) {
+    return { status: 400, message: error.message };
   }
   if (
     error instanceof SessionStateError ||

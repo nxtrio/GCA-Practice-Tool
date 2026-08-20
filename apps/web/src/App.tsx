@@ -103,6 +103,7 @@ function SessionAssessmentRoute() {
           initialProblemLanguages={Object.fromEntries(
             latestCodeSnapshots(resumed.code).map(({ problemId, language }) => [problemId, language]),
           )}
+          initialSubmissions={resumed.submissions ?? []}
           onFinish={async (code) => {
             await importClient.finishSession(resumed.session.id, code);
             navigate(`/results/${resumed.session.id}`);

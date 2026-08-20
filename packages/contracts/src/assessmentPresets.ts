@@ -1,6 +1,6 @@
 import type { AssessmentDefinition } from "./assessment.js";
 
-export type AssessmentPresetId = "gca" | "roblox";
+export type AssessmentPresetId = "gca" | "roblox" | "imc";
 
 export interface AssessmentPreset {
   id: AssessmentPresetId;
@@ -28,7 +28,19 @@ export const ASSESSMENT_PRESETS = {
     problemCount: 2,
     durationSeconds: 3_000,
   },
+  imc: {
+    id: "imc",
+    displayName: "IMC Software Engineering Assessment",
+    shortName: "IMC",
+    practiceName: "IMC SWE Practice",
+    problemCount: 2,
+    durationSeconds: 7_200,
+  },
 } as const satisfies Record<AssessmentPresetId, AssessmentPreset>;
+
+export function isAssessmentPresetId(value: unknown): value is AssessmentPresetId {
+  return value === "gca" || value === "roblox" || value === "imc";
+}
 
 export class AssessmentPresetResolutionError extends Error {
   constructor() {

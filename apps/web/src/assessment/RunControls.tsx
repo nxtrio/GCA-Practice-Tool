@@ -4,6 +4,7 @@ export interface RunControlsProps {
   running?: boolean;
   onRun?: () => void;
   onSubmit?: () => void;
+  hackerRankTerminology?: boolean;
 }
 
 export function RunControls({
@@ -12,6 +13,7 @@ export function RunControls({
   running = false,
   onRun,
   onSubmit,
+  hackerRankTerminology = false,
 }: RunControlsProps) {
   const controlsDisabled = disabled || !executionAvailable || running;
   return (
@@ -29,7 +31,7 @@ export function RunControls({
         disabled={controlsDisabled}
         onClick={onRun}
       >
-        {running ? "Running…" : "Run visible tests"}
+        {running ? "Running…" : hackerRankTerminology ? "Run Code" : "Run visible tests"}
       </button>
       <button
         className="button button--primary"
@@ -37,7 +39,7 @@ export function RunControls({
         disabled={controlsDisabled}
         onClick={onSubmit}
       >
-        {running ? "Judging…" : "Submit"}
+        {running ? "Judging…" : hackerRankTerminology ? "Submit Code" : "Submit"}
       </button>
     </div>
   );

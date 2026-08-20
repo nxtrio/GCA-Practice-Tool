@@ -12,6 +12,7 @@ import { AssessmentRepository } from "../src/persistence/repositories/Assessment
 import { SessionRepository } from "../src/persistence/repositories/SessionRepository.ts";
 import { SubmissionRepository } from "../src/persistence/repositories/SubmissionRepository.ts";
 import {
+  CustomTestValidationError,
   ExecutionConflictError,
   ExecutionService,
 } from "../src/services/ExecutionService.ts";
@@ -142,6 +143,38 @@ describe("ExecutionService native judging", () => {
       true,
     );
     expect(submissions.listForSession(sessionId)).toHaveLength(before);
+  });
+
+  it("runs a function-based custom input without creating a submission", async () => {
+    const before = submissions.listForSession(sessionId).length;
+    const result = await executionService.execute({
+      sessionId,
+      problemId: "p1",
+      language: "python",
+      source: correctSources.python,
+      mode: "custom",
+      customTest: { arguments: [[10, -4, 3]], expected: 9 },
+    });
+
+    expect(result).toMatchObject({ verdict: "accepted", passed: 1, total: 1 });
+    expect(result.tests[0]).toMatchObject({
+      visibility: "visible",
+      testId: "__custom__",
+      expected: 9,
+      actual: 9,
+    });
+    expect(submissions.listForSession(sessionId)).toHaveLength(before);
+  });
+
+  it("rejects custom values that do not match the function signature", async () => {
+    await expect(executionService.execute({
+      sessionId,
+      problemId: "p1",
+      language: "python",
+      source: correctSources.python,
+      mode: "custom",
+      customTest: { arguments: ["not-an-array"], expected: 0 },
+    })).rejects.toBeInstanceOf(CustomTestValidationError);
   });
 
   it("allows only one active execution per session and problem", async () => {
