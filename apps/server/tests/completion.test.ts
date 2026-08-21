@@ -27,6 +27,10 @@ const imcFixture = JSON.parse(readFileSync(
   new URL("../../../fixtures/assessments/valid-imc.json", import.meta.url),
   "utf8",
 )) as Assessment;
+const ctcFixture = JSON.parse(readFileSync(
+  new URL("../../../fixtures/assessments/valid-ctc.json", import.meta.url),
+  "utf8",
+)) as Assessment;
 
 describe("Phase 10 completion and history", () => {
   let directory: string;
@@ -193,6 +197,31 @@ describe("Phase 10 completion and history", () => {
       assessment: { preset: "imc", summary: { problemCount: 2 } },
       analysisRequest: {
         objective: expect.stringContaining("IMC Software Engineering Assessment"),
+      },
+    });
+  });
+
+  it("labels CTC results, history, and readiness exports with their preset", async () => {
+    const assessment = assessments.save(ctcFixture);
+    const session = sessionService.startSession(assessment.id);
+    nowMs += 5 * 60 * 1_000;
+
+    const result = await completionService.complete(session.id);
+
+    expect(result).toMatchObject({
+      assessmentTitle: "CTC SWE Practice Fixture",
+      preset: "ctc",
+      problemCount: 3,
+    });
+    expect(resultsService.history().completed[0]).toMatchObject({
+      preset: "ctc",
+      problemCount: 3,
+    });
+    expect(resultsService.analysisExport(session.id)).toMatchObject({
+      kind: "ctc_practice_readiness_analysis",
+      assessment: { preset: "ctc", summary: { problemCount: 3 } },
+      analysisRequest: {
+        objective: expect.stringContaining("CTC Software Engineering Assessment"),
       },
     });
   });

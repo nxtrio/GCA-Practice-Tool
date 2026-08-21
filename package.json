@@ -1,7 +1,7 @@
 {
   "name": "gca-practice",
   "version": "0.0.0",
-  "description": "A local GCA, Roblox-style, and IMC SWE coding assessment simulator with native Java, C++, and Python runners.",
+  "description": "A local GCA, Roblox-style, IMC SWE, and CTC SWE coding assessment simulator with native Java, C++, and Python runners.",
   "license": "MIT",
   "private": true,
   "type": "module",

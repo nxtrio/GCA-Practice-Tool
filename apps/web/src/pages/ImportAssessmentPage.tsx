@@ -156,6 +156,11 @@ export function ImportAssessmentPage({
               Unofficial HackerRank-style SWE simulation. This format is based on broad public reports and is not affiliated with or guaranteed by IMC or HackerRank.
             </p>
           )}
+          {preset.id === "ctc" && (
+            <p className="preset-disclaimer">
+              Unofficial Codility-style SWE simulation based on broad public reports. It is not affiliated with or guaranteed by CTC or Codility.
+            </p>
+          )}
           <div className="workflow-line" aria-label="Import workflow">
             <span className="workflow-active">1</span><b>Copy prompt</b><i />
             <span>2</span><b>Add JSON</b><i />

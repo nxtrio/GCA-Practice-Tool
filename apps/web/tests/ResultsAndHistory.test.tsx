@@ -207,6 +207,38 @@ describe("Phase 10 result and history pages", () => {
     expect(await screen.findByText("IMC SWE Practice Set")).toBeDefined();
     expect(screen.getByText(/IMC ·/)).toBeDefined();
   });
+
+  it("labels CTC results and history and keeps the analysis export available", async () => {
+    const ctcResult: AssessmentResultView = {
+      ...result,
+      assessmentTitle: "CTC SWE Practice Set",
+      preset: "ctc",
+      problemsSolved: 2,
+      problemCount: 3,
+      problems: result.problems.slice(0, 3),
+    };
+    const resultsRender = render(
+      <MemoryRouter initialEntries={["/results/session-1"]}>
+        <Routes>
+          <Route path="/results/:sessionId" element={<ResultsPage client={partialClient({ results: vi.fn(async () => ctcResult) })} />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("CTC SWE Practice Set")).toBeDefined();
+    expect(screen.getByText(/CTC Software Engineering Assessment · Assessment complete/)).toBeDefined();
+    expect(screen.getByRole("link", { name: "CTC SWE Practice" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Export analysis JSON" })).toBeDefined();
+    resultsRender.unmount();
+
+    render(
+      <MemoryRouter>
+        <HistoryPage client={partialClient({ history: vi.fn(async () => ({ unfinished: [], completed: [ctcResult] })) })} />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("CTC SWE Practice Set")).toBeDefined();
+    expect(screen.getByText(/CTC ·/)).toBeDefined();
+  });
 });
 
 function partialClient(methods: Partial<ImportWorkflowClient>): ImportWorkflowClient {

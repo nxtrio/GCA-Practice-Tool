@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "1.0",
+  "assessment": {
+    "preset": "ctc",
+    "title": "CTC SWE Practice Fixture",
+    "durationSeconds": 10800,
+    "problems": [
+      {
+        "id": "p1",
+        "slot": 1,
+        "title": "First Threshold Arrivals",
+        "generationMetadata": {
+          "conceptSummary": "Track cumulative per-key totals and report keys in the order they first reach a threshold.",
+          "skills": ["arrays", "hash maps", "state tracking"],
+          "expectedComplexity": "O(n)",
+          "patternTags": ["running totals", "first transition"]
+        },
+        "description": "Each event i adds changes[i] units to the running total for keys[i]. All changes are non-negative. Return the keys in the order in which their running total first becomes greater than or equal to threshold. Include each key at most once. If several keys reach the threshold, their order is determined by their event positions.",
+        "constraints": [
+          "1 <= keys.length = changes.length <= 200000",
+          "keys[i] is a nonempty string of at most 30 characters",
+          "0 <= changes[i] <= 1000000",
+          "1 <= threshold <= 1000000000"
+        ],
+        "signature": {
+          "name": "solution",
+          "parameters": [
+            { "name": "keys", "type": { "kind": "array", "items": { "kind": "string" } } },
+            { "name": "changes", "type": { "kind": "array", "items": { "kind": "int" } } },
+            { "name": "threshold", "type": { "kind": "int" } }
+          ],
+          "returnType": { "kind": "array", "items": { "kind": "string" } }
+        },
+        "examples": [
+          {
+            "arguments": [["a", "b", "a", "c", "b"], [2, 5, 4, 3, 1], 6],
+            "output": ["a", "b"],
+            "explanation": "a first reaches 6 at event 2, then b reaches 6 at event 4; c never reaches the threshold."
+          },
+          {
+            "arguments": [["x", "y"], [10, 10], 5],
+            "output": ["x", "y"],
+            "explanation": "Both keys qualify on their first event, so event order determines the result."
+          }
+        ],
+        "limits": {
+          "executionTimeMs": 2000,
+          "compileTimeMs": 10000,
+          "outputLimitBytes": 65536
+        },
+        "tests": {
+          "visible": [
+            { "id": "p1-v1", "arguments": [["a", "b", "a", "c", "b"], [2, 5, 4, 3, 1], 6], "expected": ["a", "b"], "category": "example" },
+            { "id": "p1-v2", "arguments": [["x", "y"], [10, 10], 5], "expected": ["x", "y"], "category": "first-event" }
+          ],
+          "hidden": [
+            { "id": "p1-h1", "arguments": [["only"], [4], 5], "expected": [], "category": "no-arrival" },
+            { "id": "p1-h2", "arguments": [["k", "k", "k"], [2, 3, 9], 5], "expected": ["k"], "category": "include-once" },
+            { "id": "p1-h3", "arguments": [["a", "b", "a", "b"], [0, 1, 2, 1], 2], "expected": ["a", "b"], "category": "zero-change" },
+            { "id": "p1-h4", "arguments": [["late", "early", "late"], [1, 7, 6], 7], "expected": ["early", "late"], "category": "event-order" }
+          ]
+        },
+        "validation": {
+          "referenceLanguage": "python",
+          "referenceSolution": "def solution(keys, changes, threshold):\n    totals = {}\n    arrived = set()\n    answer = []\n    for key, change in zip(keys, changes):\n        totals[key] = totals.get(key, 0) + change\n        if key not in arrived and totals[key] >= threshold:\n            arrived.add(key)\n            answer.append(key)\n    return answer"
+        }
+      },
+      {
+        "id": "p2",
+        "slot": 2,
+        "title": "Capacity Ledger",
+        "generationMetadata": {
+          "conceptSummary": "Apply ordered allocation and release commands while reporting the remaining shared capacity.",
+          "skills": ["parsing", "hash maps", "state transitions"],
+          "expectedComplexity": "O(n)",
+          "patternTags": ["command processing", "resource ledger"]
+        },
+        "description": "Process commands from left to right against a resource pool with total capacity. Each command is either `reserve name amount` or `release name amount`. A reserve succeeds only when amount does not exceed the remaining pool capacity; a release succeeds only when name currently owns at least amount units. Failed commands leave all state unchanged. A name may have several successful reservations. Return the remaining pool capacity after every command, including failed commands. Inputs are guaranteed to use one of the two command forms, names contain no spaces, and amounts are positive integers.",
+        "constraints": [
+          "1 <= commands.length <= 200000",
+          "1 <= capacity <= 1000000000",
+          "Each command has at most 80 characters",
+          "1 <= amount <= 1000000000"
+        ],
+        "signature": {
+          "name": "solution",
+          "parameters": [
+            { "name": "commands", "type": { "kind": "array", "items": { "kind": "string" } } },
+            { "name": "capacity", "type": { "kind": "int" } }
+          ],
+          "returnType": { "kind": "array", "items": { "kind": "int" } }
+        },
+        "examples": [
+          {
+            "arguments": [["reserve api 4", "reserve db 7", "release api 2", "reserve db 5"], 10],
+            "output": [6, 6, 8, 3],
+            "explanation": "The first db reservation fails, the release restores two units, and the last reservation then succeeds."
+          },
+          {
+            "arguments": [["release x 1", "reserve x 3", "release x 4"], 5],
+            "output": [5, 2, 2],
+            "explanation": "Both releases fail because x does not own enough capacity at those times."
+          }
+        ],
+        "limits": {
+          "executionTimeMs": 2000,
+          "compileTimeMs": 10000,
+          "outputLimitBytes": 65536
+        },
+        "tests": {
+          "visible": [
+            { "id": "p2-v1", "arguments": [["reserve api 4", "reserve db 7", "release api 2", "reserve db 5"], 10], "expected": [6, 6, 8, 3], "category": "example" },
+            { "id": "p2-v2", "arguments": [["release x 1", "reserve x 3", "release x 4"], 5], "expected": [5, 2, 2], "category": "failed-release" }
+          ],
+          "hidden": [
+            { "id": "p2-h1", "arguments": [["reserve a 1"], 1], "expected": [0], "category": "exact-capacity" },
+            { "id": "p2-h2", "arguments": [["reserve a 2", "reserve a 3", "release a 4"], 5], "expected": [3, 0, 4], "category": "repeated-owner" },
+            { "id": "p2-h3", "arguments": [["reserve a 6", "release a 1"], 5], "expected": [5, 5], "category": "all-fail" },
+            { "id": "p2-h4", "arguments": [["reserve a 4", "reserve b 1", "release a 4", "reserve b 4"], 5], "expected": [1, 0, 4, 0], "category": "reuse-capacity" }
+          ]
+        },
+        "validation": {
+          "referenceLanguage": "python",
+          "referenceSolution": "def solution(commands, capacity):\n    owned = {}\n    remaining = capacity\n    answer = []\n    for command in commands:\n        action, name, raw_amount = command.split()\n        amount = int(raw_amount)\n        if action == 'reserve':\n            if amount <= remaining:\n                remaining -= amount\n                owned[name] = owned.get(name, 0) + amount\n        elif owned.get(name, 0) >= amount:\n            owned[name] -= amount\n            remaining += amount\n        answer.append(remaining)\n    return answer"
+        }
+      },
+      {
+        "id": "p3",
+        "slot": 3,
+        "title": "Stable Window Coverage",
+        "generationMetadata": {
+          "conceptSummary": "Find the longest contiguous event window that contains no more than a bounded number of distinct sources.",
+          "skills": ["sliding window", "frequency maps", "two pointers"],
+          "expectedComplexity": "O(n)",
+          "patternTags": ["bounded diversity", "incremental window"]
+        },
+        "description": "The array sources records the source identifier of each event in chronological order. Return the maximum length of a contiguous event window containing at most maxSources distinct identifiers. The window must contain at least one event. A direct approach that recomputes the set of identifiers for every possible window is too slow for the largest input.",
+        "constraints": [
+          "1 <= sources.length <= 300000",
+          "-1000000000 <= sources[i] <= 1000000000",
+          "1 <= maxSources <= sources.length"
+        ],
+        "signature": {
+          "name": "solution",
+          "parameters": [
+            { "name": "sources", "type": { "kind": "array", "items": { "kind": "int" } } },
+            { "name": "maxSources", "type": { "kind": "int" } }
+          ],
+          "returnType": { "kind": "int" }
+        },
+        "examples": [
+          {
+            "arguments": [[1, 2, 1, 3, 3, 2, 2], 2],
+            "output": 4,
+            "explanation": "The final window [3, 2, 2] has length 3, while [3, 3, 2, 2] has length 4 and uses only sources 2 and 3."
+          },
+          {
+            "arguments": [[5, 5, 5], 1],
+            "output": 3,
+            "explanation": "The complete event sequence uses one distinct source."
+          }
+        ],
+        "limits": {
+          "executionTimeMs": 2000,
+          "compileTimeMs": 10000,
+          "outputLimitBytes": 65536
+        },
+        "tests": {
+          "visible": [
+            { "id": "p3-v1", "arguments": [[1, 2, 1, 3, 3, 2, 2], 2], "expected": 4, "category": "example" },
+            { "id": "p3-v2", "arguments": [[5, 5, 5], 1], "expected": 3, "category": "single-source" }
+          ],
+          "hidden": [
+            { "id": "p3-h1", "arguments": [[9], 1], "expected": 1, "category": "minimum" },
+            { "id": "p3-h2", "arguments": [[1, 2, 3, 4], 4], "expected": 4, "category": "all-allowed" },
+            { "id": "p3-h3", "arguments": [[1, 2, 1, 2, 3, 2, 2], 2], "expected": 4, "category": "shrink-and-grow" },
+            { "id": "p3-h4", "arguments": [[-1, -1, 0, -1, 2, 2], 2], "expected": 4, "category": "negative-identifiers" }
+          ]
+        },
+        "validation": {
+          "referenceLanguage": "python",
+          "referenceSolution": "def solution(sources, maxSources):\n    counts = {}\n    left = 0\n    best = 0\n    for right, source in enumerate(sources):\n        counts[source] = counts.get(source, 0) + 1\n        while len(counts) > maxSources:\n            outgoing = sources[left]\n            counts[outgoing] -= 1\n            if counts[outgoing] == 0:\n                del counts[outgoing]\n            left += 1\n        best = max(best, right - left + 1)\n    return best"
+        }
+      }
+    ]
+  }
+}

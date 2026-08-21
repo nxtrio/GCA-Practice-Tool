@@ -205,3 +205,70 @@ test("completes the unofficial two-question IMC SWE workflow", async ({ page }) 
   }).first();
   await expect(completedRow).toContainText("IMC");
 });
+
+test("completes the unofficial three-question CTC SWE workflow", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "CTC Software Engineering Assessment" })).toBeVisible();
+  await expect(page.getByText("3 Questions · 180 Minutes")).toBeVisible();
+  await page.getByRole("link", { name: /Practice CTC/ }).click();
+
+  await expect(page).toHaveURL(/\/import\?preset=ctc$/);
+  await expect(page.getByRole("heading", { name: "New CTC SWE Practice." })).toBeVisible();
+  await expect(page.getByText(/3 questions · 180 minutes/)).toBeVisible();
+  await expect(page.getByText(/Unofficial Codility-style SWE simulation/)).toBeVisible();
+  await page.getByLabel(/I trust this assessment source/).check();
+  await page.getByLabel("Upload JSON file").setInputFiles(
+    resolve("fixtures/assessments/valid-ctc.json"),
+  );
+  await expect(page.getByText("Assessment is ready")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/3-problem CTC semantics/)).toBeVisible();
+  await page.getByRole("button", { name: "Start CTC Assessment" }).click();
+
+  await expect(page.locator(".assessment-brand")).toContainText("CTC SWE Practice");
+  await expect(page.getByRole("button", { name: /Question 1:/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Question 2:/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Question 3:/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Question 4:/ })).toHaveCount(0);
+  await expect(page.getByLabel("Time remaining")).toHaveText(/^(?:3:00:00|2:59:[0-5]\d)$/);
+
+  await page.getByLabel("Programming language").selectOption("python");
+  await page.locator(".monaco-editor .view-lines").click();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.type(
+    "def solution(keys, changes, threshold): return [key for i, key in enumerate(keys) if sum(changes[j] for j in range(i + 1) if keys[j] == key) >= threshold and all(sum(changes[j] for j in range(k + 1) if keys[j] == key) < threshold for k in range(i))]",
+  );
+  await page.getByRole("button", { name: "Run visible tests" }).click();
+  await expect(page.getByText(/2\/2 passed/)).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(/6\/6 passed/)).toBeVisible({ timeout: 30_000 });
+
+  await page.getByRole("button", { name: /Question 2:/ }).click();
+  await expect(page.getByText("Capacity Ledger").first()).toBeVisible();
+  await page.getByRole("button", { name: /Question 3:/ }).click();
+  await expect(page.getByText("Stable Window Coverage").first()).toBeVisible();
+  await page.getByRole("button", { name: /Question 1:/ }).click();
+  await expect(page.locator(".monaco-editor .view-lines")).toContainText("enumerate(keys)");
+
+  await page.getByRole("button", { name: "Finish session" }).click();
+  await expect(page.getByText(/Assessment complete/)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("CTC SWE Practice Fixture")).toBeVisible();
+  await expect(page.getByText("1 / 3")).toBeVisible();
+  await expect(page.locator(".problem-result-row")).toHaveCount(3);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Export analysis JSON" }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  const exported = JSON.parse(await readFile(path!, "utf8")) as {
+    kind: string;
+    assessment: { preset: string };
+  };
+  expect(exported.kind).toBe("ctc_practice_readiness_analysis");
+  expect(exported.assessment.preset).toBe("ctc");
+
+  await page.getByRole("link", { name: "View history" }).click();
+  const completedRow = page.locator(".history-row--completed").filter({
+    hasText: "CTC SWE Practice Fixture",
+  }).first();
+  await expect(completedRow).toContainText("CTC");
+});

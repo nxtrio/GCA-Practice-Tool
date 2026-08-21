@@ -4,6 +4,7 @@ import {
   type ProblemHistoryEntry,
 } from "./AvoidanceManifestBuilder.js";
 import generationPromptTemplate from "./assessment-generation-prompt.txt?raw";
+import ctcGenerationPromptTemplate from "./ctc-assessment-generation-prompt.txt?raw";
 import imcGenerationPromptTemplate from "./imc-assessment-generation-prompt.txt?raw";
 import robloxGenerationPromptTemplate from "./roblox-assessment-generation-prompt.txt?raw";
 
@@ -20,6 +21,7 @@ export class GenerationPromptBuilder {
       gca: generationPromptTemplate,
       roblox: robloxGenerationPromptTemplate,
       imc: imcGenerationPromptTemplate,
+      ctc: ctcGenerationPromptTemplate,
     }[this.preset];
     return template
       .replace(HISTORY_MANIFEST_TOKEN, this.avoidance.build(history, this.preset))

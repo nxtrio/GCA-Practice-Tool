@@ -9,7 +9,7 @@ import { HomePage } from "../src/pages/HomePage.tsx";
 afterEach(() => cleanup());
 
 describe("HomePage assessment presets", () => {
-  it("offers GCA, Roblox, and unofficial IMC SWE practice", async () => {
+  it("offers GCA, Roblox, IMC, and unofficial CTC SWE practice", async () => {
     const client = {
       history: vi.fn(async () => ({ unfinished: [], completed: [] })),
       environment: vi.fn(async () => ({
@@ -24,8 +24,11 @@ describe("HomePage assessment presets", () => {
     expect(screen.getByRole("heading", { name: "General Coding Assessment" })).toBeDefined();
     expect(screen.getByRole("heading", { name: "Roblox Coding Assessment" })).toBeDefined();
     expect(screen.getByRole("heading", { name: "IMC Software Engineering Assessment" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "CTC Software Engineering Assessment" })).toBeDefined();
     expect(screen.getByText("2 Questions · 120 Minutes")).toBeDefined();
+    expect(screen.getByText("3 Questions · 180 Minutes")).toBeDefined();
     expect(screen.getByText(/Unofficial HackerRank-style algorithms/)).toBeDefined();
     expect(screen.getByRole("link", { name: /Practice IMC/ }).getAttribute("href")).toBe("/import?preset=imc");
+    expect(screen.getByRole("link", { name: /Practice CTC/ }).getAttribute("href")).toBe("/import?preset=ctc");
   });
 });

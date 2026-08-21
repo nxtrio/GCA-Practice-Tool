@@ -112,7 +112,9 @@ describe("ProcessRunner", () => {
       const result = await runner.run(
         request(
           'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000);',
-          { timeoutMs: 100, terminationGraceMs: 50 },
+          // Leave enough startup time for the child to install its signal
+          // handler even when the full test suite is running concurrently.
+          { timeoutMs: 500, terminationGraceMs: 50 },
         ),
       );
 

@@ -166,6 +166,26 @@ describe("ImportAssessmentPage", () => {
     expect(screen.getByText(/"preset": "imc"/)).toBeDefined();
   });
 
+  it("identifies CTC mode and uses its dedicated generation flow", () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn(async () => undefined) },
+    });
+    const client = fakeClient({ valid: false, errors: [], warnings: [] });
+    render(
+      <MemoryRouter initialEntries={["/import?preset=ctc"]}>
+        <ImportAssessmentPage client={client} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "New CTC SWE Practice." })).toBeDefined();
+    expect(screen.getByText(/3 questions · 180 minutes/)).toBeDefined();
+    expect(screen.getByText(/Unofficial Codility-style SWE simulation/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "Copy CTC Generation Prompt" })).toBeDefined();
+    expect(client.problemHistory).toHaveBeenCalledWith("ctc");
+    expect(screen.getByText(/"preset": "ctc"/)).toBeDefined();
+  });
+
   it("warns that imported reference code executes locally", () => {
     render(<MemoryRouter><ImportAssessmentPage client={fakeClient({ valid: false, errors: [], warnings: [] })} /></MemoryRouter>);
 

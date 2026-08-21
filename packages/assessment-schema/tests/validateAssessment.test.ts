@@ -1,5 +1,9 @@
 import { readFileSync } from "node:fs";
-import type { Assessment } from "@gca-practice/contracts";
+import {
+  ASSESSMENT_PRESETS,
+  isAssessmentPresetId,
+  type Assessment,
+} from "@gca-practice/contracts";
 import { describe, expect, it } from "vitest";
 import {
   validateAssessment,
@@ -22,6 +26,10 @@ const validRobloxFixtureSource = readFileSync(
 );
 const validImcFixtureSource = readFileSync(
   new URL("../../../fixtures/assessments/valid-imc.json", import.meta.url),
+  "utf8",
+);
+const validCtcFixtureSource = readFileSync(
+  new URL("../../../fixtures/assessments/valid-ctc.json", import.meta.url),
   "utf8",
 );
 
@@ -86,6 +94,76 @@ describe("validateAssessment", () => {
       });
       expect(result.assessment.assessment.problems).toHaveLength(2);
     }
+  });
+
+  it("defines and accepts the three-problem 180-minute CTC preset", () => {
+    expect(isAssessmentPresetId("ctc")).toBe(true);
+    expect(ASSESSMENT_PRESETS.ctc).toMatchObject({
+      id: "ctc",
+      displayName: "CTC Software Engineering Assessment",
+      shortName: "CTC",
+      practiceName: "CTC SWE Practice",
+      problemCount: 3,
+      durationSeconds: 10_800,
+    });
+
+    const result = validateAssessment(validCtcFixtureSource);
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.assessment.assessment).toMatchObject({
+        preset: "ctc",
+        durationSeconds: 10_800,
+      });
+      expect(result.assessment.assessment.problems.map(({ id, slot }) => ({ id, slot }))).toEqual([
+        { id: "p1", slot: 1 },
+        { id: "p2", slot: 2 },
+        { id: "p3", slot: 3 },
+      ]);
+    }
+  });
+
+  it.each([2, 4])("rejects CTC assessments with %i problems", (count) => {
+    const document = JSON.parse(validCtcFixtureSource) as Assessment;
+    if (count === 2) {
+      document.assessment.problems.pop();
+    } else {
+      const p4 = structuredClone(document.assessment.problems[0]!);
+      Object.assign(p4, { id: "p4", slot: 4 });
+      document.assessment.problems.push(p4);
+    }
+
+    expect(errorsOf(validateDocument(document))).toContainEqual(
+      expect.objectContaining({
+        stage: "semantic",
+        code: "problem_count",
+        path: "/assessment/problems",
+        message: `CTC Software Engineering Assessment requires exactly 3 problems; received ${count}.`,
+      }),
+    );
+  });
+
+  it("rejects CTC assessments with the wrong duration", () => {
+    const document = JSON.parse(validCtcFixtureSource) as Assessment;
+    document.assessment.durationSeconds = 7_200;
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "invalid_duration",
+      path: "/assessment/durationSeconds",
+      message: "CTC Software Engineering Assessment must last exactly 10800 seconds (180 minutes).",
+    });
+  });
+
+  it("rejects CTC assessments unless slots are exactly 1, 2, and 3", () => {
+    const document = JSON.parse(validCtcFixtureSource) as Assessment;
+    document.assessment.problems[2]!.slot = 2;
+
+    expect(errorsOf(validateDocument(document))).toContainEqual({
+      stage: "semantic",
+      code: "invalid_slots",
+      path: "/assessment/problems",
+      message: "CTC Software Engineering Assessment requires problem slots 1, 2 and 3.",
+    });
   });
 
   it.each([1, 3])("rejects IMC assessments with %i problem(s)", (count) => {

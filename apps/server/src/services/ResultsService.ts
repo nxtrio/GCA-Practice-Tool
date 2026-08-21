@@ -103,7 +103,8 @@ export interface ReadinessAnalysisExport {
   kind:
     | "gca_practice_readiness_analysis"
     | "roblox_practice_readiness_analysis"
-    | "imc_practice_readiness_analysis";
+    | "imc_practice_readiness_analysis"
+    | "ctc_practice_readiness_analysis";
   generatedAt: string;
   privacy: {
     hiddenTestDetailsIncluded: false;
@@ -412,5 +413,7 @@ function readinessExportKind(
       return "roblox_practice_readiness_analysis";
     case "imc":
       return "imc_practice_readiness_analysis";
+    case "ctc":
+      return "ctc_practice_readiness_analysis";
   }
 }

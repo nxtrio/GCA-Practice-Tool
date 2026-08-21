@@ -26,6 +26,10 @@ const validImcFixtureSource = readFileSync(
   new URL("../../../fixtures/assessments/valid-imc.json", import.meta.url),
   "utf8",
 );
+const validCtcFixtureSource = readFileSync(
+  new URL("../../../fixtures/assessments/valid-ctc.json", import.meta.url),
+  "utf8",
+);
 
 function fixture(): Assessment {
   return JSON.parse(validFixtureSource) as Assessment;
@@ -91,6 +95,23 @@ describe("ReferenceSolutionValidator", () => {
         durationSeconds: 7_200,
       });
       expect(result.assessment.assessment.problems).toHaveLength(2);
+      expect(result.errors).toEqual([]);
+    }
+  });
+
+  it("accepts the canonical CTC fixture after executing every reference testcase", async () => {
+    const result = await validateAssessmentWithOracle(
+      validCtcFixtureSource,
+      validator,
+    );
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.assessment.assessment).toMatchObject({
+        preset: "ctc",
+        durationSeconds: 10_800,
+      });
+      expect(result.assessment.assessment.problems).toHaveLength(3);
       expect(result.errors).toEqual([]);
     }
   });

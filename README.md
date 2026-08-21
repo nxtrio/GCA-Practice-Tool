@@ -1,6 +1,6 @@
 # Coding Assessment Practice
 
-A local, no-account coding-assessment simulator with strict assessment validation and native Java/C++/Python execution. Practice a classic GCA format, an implementation-heavy Roblox-oriented format, or an unofficial IMC SWE HackerRank-style format without question-bank spoilers or platform noise.
+A local, no-account coding-assessment simulator with strict assessment validation and native Java/C++/Python execution. Practice four formats—GCA, Roblox-oriented, IMC SWE, and CTC SWE—without question-bank spoilers or platform noise.
 
 ## Start
 
@@ -22,6 +22,7 @@ npm start
 - GCA Practice: 4 questions in 70 minutes
 - Roblox Coding Assessment Practice: 2 questions in 50 minutes, with implementation/matrix-biased generation
 - IMC Software Engineering Practice: 2 questions in 120 minutes, with HackerRank-style algorithms/data-structures practice at Medium-Hard / Hard difficulty
+- CTC Software Engineering Practice: 3 questions in 180 minutes, with Codility-style implementation, logic, state-processing, and scalable problem-solving practice
 - Prompt-assisted generation with upload-or-paste JSON import and strict reference-solution validation
 - Preset-aware generation history that avoids repeating concepts within the selected format
 - Monaco editor with Java, C++, and Python runners
@@ -47,4 +48,4 @@ npm run test:e2e
 
 Data is stored under `apps/server/data/` and is ignored by Git.
 
-This is an unofficial project and is not affiliated with or endorsed by Roblox, CodeSignal, IMC, or HackerRank. The IMC format models broad publicly reported assessment characteristics and is not a guarantee of the real assessment format. Every generation prompt requires original practice problems—not copied, leaked, paraphrased, or reconstructed assessment questions. See the [base implementation specification](implementation-plans/gca_practice_codex_implementation_spec.md), [Roblox preset expansion specification](implementation-plans/assessment_presets_roblox_expansion.md), [IMC preset specification](implementation-plans/imc_swe_hackerrank_practice_codex_prompt.md), [contribution guide](CONTRIBUTING.md), and [MIT license](LICENSE).
+This is an unofficial project and is not affiliated with or endorsed by Roblox, CodeSignal, IMC, HackerRank, Chicago Trading Company (CTC), or Codility. The IMC and CTC formats model broad publicly reported assessment characteristics; their durations, question counts, and difficulty profiles are approximations and may change. Every generation prompt requires original practice problems—not copied, leaked, paraphrased, or reconstructed assessment questions. See the [base implementation specification](implementation-plans/gca_practice_codex_implementation_spec.md), [Roblox preset expansion specification](implementation-plans/assessment_presets_roblox_expansion.md), [IMC preset specification](implementation-plans/imc_swe_hackerrank_practice_codex_prompt.md), [CTC preset specification](implementation-plans/ctc_swe_codility_practice_codex_prompt.md), [contribution guide](CONTRIBUTING.md), and [MIT license](LICENSE).

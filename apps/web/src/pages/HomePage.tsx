@@ -41,6 +41,7 @@ export function HomePage({ client = defaultClient }: { client?: ImportWorkflowCl
           <PresetCard preset="gca" description="Classic progression from fundamentals through optimization." />
           <PresetCard preset="roblox" description="Implementation-heavy practice with a matrix and simulation bias." />
           <PresetCard preset="imc" description="Unofficial HackerRank-style algorithms and data structures practice at Medium-Hard / Hard difficulty." />
+          <PresetCard preset="ctc" description="Unofficial Codility-style implementation, logic, state processing, and scalable problem solving." />
         </div>
         <div className="home-actions">
           {active && <Link className="resume-button" to={`/assessment/${active.sessionId}`}>Resume {ASSESSMENT_PRESETS[active.preset].shortName}: {active.assessmentTitle} <span>{active.problemsSolved}/{active.problemCount}</span></Link>}

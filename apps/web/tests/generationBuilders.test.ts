@@ -91,6 +91,41 @@ describe("Phase 9 prompt builders", () => {
     expect(prompt).not.toContain("Controlled Calibration");
   });
 
+  it("builds a dedicated CTC SWE prompt and injects same-preset history", () => {
+    const prompt = new GenerationPromptBuilder("ctc").build([{
+      preset: "ctc",
+      title: "Prior Ledger",
+      conceptSummary: "Track ordered state changes in a resource ledger.",
+      patternTags: ["state processing", "hash map"],
+      complexity: "O(n)",
+      signatureShape: "(array<string>) -> array<int>",
+    }]);
+
+    expect(prompt).toContain('"preset": "ctc"');
+    expect(prompt).toContain('"durationSeconds": 10800');
+    expect(prompt).toContain("exactly three single-function problems");
+    expect(prompt).toContain("slots exactly 1, 2, and 3");
+    expect(prompt).toContain('"p1"');
+    expect(prompt).toContain('"p2"');
+    expect(prompt).toContain('"p3"');
+    expect(prompt).toContain("implementation-heavy");
+    expect(prompt).toContain("logic-heavy");
+    expect(prompt).toContain("ORIGINALITY REQUIREMENT");
+    expect(prompt).toContain("candidate-reported CTC question");
+    expect(prompt).toContain("12–18 hidden tests");
+    expect(prompt).toContain("SAME-PRESET HISTORY (ctc)");
+    expect(prompt).toContain("Prior Ledger");
+    expect(prompt).not.toContain("{{HISTORY_MANIFEST}}");
+    expect(prompt).not.toContain('"durationSeconds": 4200');
+    expect(prompt).not.toContain('"durationSeconds": 3000');
+    expect(prompt).not.toContain('"durationSeconds": 7200');
+    expect(prompt).not.toContain('"preset": "gca"');
+    expect(prompt).not.toContain('"preset": "roblox"');
+    expect(prompt).not.toContain('"preset": "imc"');
+    expect(prompt).not.toContain("exactly two single-function problems");
+    expect(prompt).not.toContain("exactly four single-function problems");
+  });
+
   it("builds a useful empty avoidance manifest", () => {
     expect(new AvoidanceManifestBuilder().build([])).toContain(
       "No prior imported problems",

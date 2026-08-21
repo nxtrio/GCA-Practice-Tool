@@ -8,10 +8,23 @@ The assessment-preset expansion specification is:
 
 implementation-plans/assessment_presets_roblox_expansion.md
 
-Read both before making architectural or implementation decisions. The preset
-expansion specification supersedes the original GCA-only assumptions wherever
-the two conflict; the original specification remains authoritative for shared
-architecture, execution, validation, and security boundaries.
+The IMC assessment preset specification is:
+
+implementation-plans/imc_swe_hackerrank_practice_codex_prompt.md
+
+The CTC assessment preset specification is:
+
+implementation-plans/ctc_swe_codility_practice_codex_prompt.md
+
+Read the applicable specifications before making architectural or implementation
+decisions. The preset expansion specifications supersede the original GCA-only
+assumptions wherever they conflict; the original specification remains
+authoritative for shared architecture, execution, validation, and security
+boundaries.
+
+Treat the IMC and CTC specifications as authoritative for their respective
+preset-specific behavior while preserving the shared architecture and safety
+requirements above.
 
 Implement the project according to the applicable specification's ordered
 phases and priorities.

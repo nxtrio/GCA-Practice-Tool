@@ -20,7 +20,7 @@
       "required": ["title", "durationSeconds", "problems"],
       "properties": {
         "preset": {
-          "enum": ["gca", "roblox", "imc"]
+          "enum": ["gca", "roblox", "imc", "ctc"]
         },
         "title": {
           "type": "string",
